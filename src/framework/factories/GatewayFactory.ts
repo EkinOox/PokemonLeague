@@ -8,20 +8,23 @@
 import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
 import { PokeAPIMoveGateway } from '@/adapters/gateways/MoveAPIGateway';
 import { ItemGateway } from '@/adapters/gateways/ItemGateway';
+import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
+import { IMoveGateway } from '@/domain/ports/IMoveGateway';
+import { IItemGateway } from '@/domain/ports/IItemGateway';
 import { ServiceFactory } from './ServiceFactory';
 
 /**
  * Factory pour créer les gateways
  */
 export class GatewayFactory {
-  private static pokemonGatewayInstance: PokemonAPIGateway | null = null;
-  private static moveGatewayInstance: PokeAPIMoveGateway | null = null;
-  private static itemGatewayInstance: ItemGateway | null = null;
+  private static pokemonGatewayInstance: IPokemonGateway | null = null;
+  private static moveGatewayInstance: IMoveGateway | null = null;
+  private static itemGatewayInstance: IItemGateway | null = null;
 
   /**
    * Retourne une instance singleton du Pokemon Gateway
    */
-  static getPokemonGateway(): PokemonAPIGateway {
+  static getPokemonGateway(): IPokemonGateway {
     if (!this.pokemonGatewayInstance) {
       this.pokemonGatewayInstance = new PokemonAPIGateway();
     }
@@ -31,7 +34,7 @@ export class GatewayFactory {
   /**
    * Retourne une instance singleton du Move Gateway
    */
-  static getMoveGateway(): PokeAPIMoveGateway {
+  static getMoveGateway(): IMoveGateway {
     if (!this.moveGatewayInstance) {
       this.moveGatewayInstance = new PokeAPIMoveGateway();
     }
@@ -41,7 +44,7 @@ export class GatewayFactory {
   /**
    * Retourne une instance singleton de l'Item Gateway
    */
-  static getItemGateway(): ItemGateway {
+  static getItemGateway(): IItemGateway {
     if (!this.itemGatewayInstance) {
       // ItemGateway nécessite un RandomGenerator
       this.itemGatewayInstance = new ItemGateway(ServiceFactory.getRandomGenerator());
@@ -61,15 +64,15 @@ export class GatewayFactory {
   /**
    * Permet d'injecter des mocks pour les tests
    */
-  static setPokemonGateway(mock: PokemonAPIGateway): void {
+  static setPokemonGateway(mock: IPokemonGateway): void {
     this.pokemonGatewayInstance = mock;
   }
 
-  static setMoveGateway(mock: PokeAPIMoveGateway): void {
+  static setMoveGateway(mock: IMoveGateway): void {
     this.moveGatewayInstance = mock;
   }
 
-  static setItemGateway(mock: ItemGateway): void {
+  static setItemGateway(mock: IItemGateway): void {
     this.itemGatewayInstance = mock;
   }
 }

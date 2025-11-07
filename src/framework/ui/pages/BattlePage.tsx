@@ -12,6 +12,7 @@ import { PokemonSwitcher } from '@/framework/ui/components/PokemonSwitcher';
 import { Move } from '@/domain/entities/Move';
 import { Item } from '@/domain/entities/Item';
 import { Pokemon } from '@/domain/entities/Pokemon';
+import { Battle } from '@/domain/entities/Battle';
 import { UseCaseFactory, GatewayFactory } from '@/framework/factories';
 
 type BattlePhase = 'selecting' | 'inventory' | 'switching' | 'animating' | 'finished';
@@ -299,19 +300,14 @@ export function BattlePage() {
   };
 
   // Appliquer les dégâts de statut aux deux Pokémon à la fin du tour
-  const applyEndOfTurnStatusDamage = async (currentBattle: any) => {
+  const applyEndOfTurnStatusDamage = async (currentBattle: Battle) => {
     let playerPokemon = currentBattle.trainer1.team[0];
     let opponentPokemon = currentBattle.trainer2.team[0];
     let battleUpdated = false;
 
-    console.log(`🔄 Fin du tour - Statuts:`);
-    console.log(`   Joueur: ${playerPokemon.name} - Status: ${playerPokemon.status} - HP: ${playerPokemon.currentHp}/${playerPokemon.maxHp}`);
-    console.log(`   Adversaire: ${opponentPokemon.name} - Status: ${opponentPokemon.status} - HP: ${opponentPokemon.currentHp}/${opponentPokemon.maxHp}`);
-
     // Appliquer les dégâts de statut au Pokémon du joueur
     const playerStatusDamage = battleUseCase.applyStatusDamage(playerPokemon);
     if (playerStatusDamage.message) {
-      console.log(`💚 Statut joueur appliqué: ${playerStatusDamage.message}`);
       playerPokemon = playerStatusDamage.pokemon;
       setBattleMessage(playerStatusDamage.message);
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -342,7 +338,6 @@ export function BattlePage() {
     // Appliquer les dégâts de statut au Pokémon adverse
     const opponentStatusDamage = battleUseCase.applyStatusDamage(opponentPokemon);
     if (opponentStatusDamage.message) {
-      console.log(`💚 Statut adversaire appliqué: ${opponentStatusDamage.message}`);
       opponentPokemon = opponentStatusDamage.pokemon;
       setBattleMessage(opponentStatusDamage.message);
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -384,11 +379,7 @@ export function BattlePage() {
         return;
       }
     }
-
-    console.log(`🔄 Après statuts:`);
-    console.log(`   Joueur: ${playerPokemon.name} - Status: ${playerPokemon.status} - HP: ${playerPokemon.currentHp}/${playerPokemon.maxHp}`);
-    console.log(`   Adversaire: ${opponentPokemon.name} - Status: ${opponentPokemon.status} - HP: ${opponentPokemon.currentHp}/${opponentPokemon.maxHp}`);
-
+    
     // Mettre à jour la battle si des dégâts de statut ont été appliqués
     if (battleUpdated) {
       const updatedBattle = {
@@ -411,7 +402,7 @@ export function BattlePage() {
   };
 
   // Tour de l'adversaire
-  const handleOpponentTurn = async (currentBattle: any) => {
+  const handleOpponentTurn = async (currentBattle: Battle) => {
     if (!currentBattle) return;
 
     let opponentPokemon = currentBattle.trainer2.team[0];

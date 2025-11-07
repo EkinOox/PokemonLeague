@@ -1,7 +1,8 @@
 import { Item } from '../../domain/entities/Item';
 import { IRandomGenerator } from '../../domain/ports/IRandomGenerator';
+import { IItemGateway } from '@/domain/ports/IItemGateway';
 
-export class ItemGateway {
+export class ItemGateway implements IItemGateway {
   private items: { [key: string]: Item } = {
     potion: { id: 'potion', name: 'potion', type: 'healing', effect: 20 },
     'x-attack': { id: 'x-attack', name: 'x-attack', type: 'boost', effect: 1.5 },

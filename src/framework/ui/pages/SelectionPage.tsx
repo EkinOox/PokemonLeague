@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/framework/ui/context/GameContext';
 import { PokemonCard } from '@/framework/ui/components/PokemonCard';
-import { PokemonSet } from '@/application/usecases/GameInitializationUseCase';
+import { PokemonSet } from '@/domain/ports/IGameInitializationUseCase';
 import { Pokemon } from '@/domain/entities/Pokemon';
 import { UseCaseFactory, GatewayFactory } from '@/framework/factories';
 

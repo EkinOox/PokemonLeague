@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '@/framework/ui/context/GameContext';
-import { RewardOptions, ItemReward, PokemonReward } from '@/application/usecases/RewardsUseCase';
+import { RewardOptions, ItemReward, PokemonReward } from '@/domain/ports/IRewardsUseCase';
 import { Pokemon } from '@/domain/entities/Pokemon';
 import { UseCaseFactory } from '@/framework/factories';
 

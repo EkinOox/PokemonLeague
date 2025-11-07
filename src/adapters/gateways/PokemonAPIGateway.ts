@@ -1,6 +1,30 @@
 import { Pokemon } from '../../domain/entities/Pokemon';
+import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
 
-export class PokemonAPIGateway {
+interface TyradexType {
+  name: string;
+  image?: string;
+}
+
+interface TyradexPokemonData {
+  pokedex_id?: number;
+  name?: { fr?: string; en?: string };
+  types?: TyradexType[];
+  stats?: {
+    hp?: number;
+    atk?: number;
+    def?: number;
+    spe_atk?: number;
+    spe_def?: number;
+    vit?: number;
+  };
+  sprites?: {
+    regular?: string;
+    shiny?: string;
+  };
+}
+
+export class PokemonAPIGateway implements IPokemonGateway {
   private baseUrl = 'https://tyradex.vercel.app/api/v1/pokemon';
 
   async getPokemon(id: string): Promise<Pokemon | null> {
@@ -9,11 +33,11 @@ export class PokemonAPIGateway {
       if (!response.ok) {
         return null;
       }
-      const data = await response.json();
+      const data: TyradexPokemonData = await response.json();
       const pokemon = new Pokemon();
       pokemon.id = data.pokedex_id?.toString() || id;
       pokemon.name = data.name?.fr || data.name?.en || id;
-      pokemon.types = data.types?.map((t: any) => t.name) || [];
+      pokemon.types = data.types?.map((t: TyradexType) => t.name) || [];
       pokemon.stats = {
         hp: data.stats?.hp || 0,
         attack: data.stats?.atk || 0,
@@ -28,7 +52,7 @@ export class PokemonAPIGateway {
       
       // Les talents sont des capacités passives, pas des mouvements
       // On utilise seulement des mouvements par défaut basés sur les types
-      const types = data.types?.map((t: any) => t.name) || ['normal'];
+      const types = data.types?.map((t: TyradexType) => t.name) || ['normal'];
       pokemon.moves = this.getDefaultMovesForTypes(types);
       
       // Essayer plusieurs sources de sprites

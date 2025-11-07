@@ -3,8 +3,9 @@ import { Pokemon } from '@/domain/entities/Pokemon';
 import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
+import { ILeagueUseCase } from '@/domain/ports/ILeagueUseCase';
 
-export class LeagueUseCase {
+export class LeagueUseCase implements ILeagueUseCase {
   private gateway: PokemonAPIGateway;
 
   constructor(

@@ -1,4 +1,5 @@
-import { GameInitializationUseCase, PokemonSet } from './GameInitializationUseCase';
+import { GameInitializationUseCase } from './GameInitializationUseCase';
+import { PokemonSet } from '@/domain/ports/IGameInitializationUseCase';
 import { Pokemon } from '@/domain/entities/Pokemon';
 import { Trainer } from '@/domain/entities/Trainer';
 import { MockRandomGenerator, MockDateProvider } from './__mocks__/testHelpers';

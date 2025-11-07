@@ -3,8 +3,9 @@ import { Pokemon, StatusCondition, StatModifiers } from '@/domain/entities/Pokem
 import { Move, StatusEffect, MoveEffect } from '@/domain/entities/Move';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
+import { IBattleUseCase } from '@/domain/ports/IBattleUseCase';
 
-export class BattleUseCase {
+export class BattleUseCase implements IBattleUseCase {
   constructor(
     private randomGenerator: IRandomGenerator,
     private mathService: IMathService

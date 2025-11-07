@@ -1,8 +1,9 @@
 import { Pokemon, StatusCondition } from '../../domain/entities/Pokemon';
 import { Item } from '../../domain/entities/Item';
 import { IMathService } from '@/domain/ports/IMathService';
+import { IUseItemUseCase } from '@/domain/ports/IUseItemUseCase';
 
-export class UseItemUseCase {
+export class UseItemUseCase implements IUseItemUseCase {
   constructor(private mathService: IMathService) {}
 
   execute(pokemon: Pokemon, item: Item): { success: boolean; message: string; pokemon?: Pokemon } {

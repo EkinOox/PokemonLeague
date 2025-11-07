@@ -4,26 +4,9 @@ import { Trainer } from '@/domain/entities/Trainer';
 import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
+import { IRewardsUseCase, ItemReward, PokemonReward, RewardOptions } from '@/domain/ports/IRewardsUseCase';
 
-export interface ItemReward {
-  item: Item;
-  selected: boolean;
-}
-
-export interface PokemonReward {
-  pokemon: Pokemon;
-  selected: boolean;
-}
-
-export interface RewardOptions {
-  points: number;
-  itemOptions: ItemReward[]; // 5 items proposés
-  pokemonOptions: PokemonReward[]; // 3 Pokémon proposés
-  maxItemSelections: number; // 2
-  maxPokemonSelections: number; // 1
-}
-
-export class RewardsUseCase {
+export class RewardsUseCase implements IRewardsUseCase {
   private gateway: PokemonAPIGateway;
 
   constructor(

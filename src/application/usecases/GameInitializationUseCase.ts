@@ -2,13 +2,9 @@ import { Pokemon } from '../../domain/entities/Pokemon';
 import { Trainer } from '../../domain/entities/Trainer';
 import { IRandomGenerator } from '../../domain/ports/IRandomGenerator';
 import { IDateProvider } from '../../domain/ports/IDateProvider';
+import { IGameInitializationUseCase, PokemonSet } from '@/domain/ports/IGameInitializationUseCase';
 
-export interface PokemonSet {
-  pokemons: Pokemon[];
-  theme: string;
-}
-
-export class GameInitializationUseCase {
+export class GameInitializationUseCase implements IGameInitializationUseCase {
   constructor(
     private randomGenerator: IRandomGenerator,
     private dateProvider: IDateProvider

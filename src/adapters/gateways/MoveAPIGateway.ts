@@ -1,12 +1,22 @@
 import { Move } from '@/domain/entities/Move';
 import { getMoveEffect } from '@/domain/config/moveEffects';
+import { IMoveGateway } from '@/domain/ports/IMoveGateway';
 
-export interface MoveAPIGateway {
-  getMoveByName(moveName: string): Promise<Move>;
-  getMovesByNames(moveNames: string[]): Promise<Move[]>;
+interface PokeAPIMoveData {
+  name: string;
+  type: { name: string };
+  power: number | null;
+  accuracy: number | null;
+  pp: number;
+  damage_class: { name: string };
+  priority: number;
+  effect_entries: Array<{
+    language: { name: string };
+    short_effect: string;
+  }>;
 }
 
-export class PokeAPIMoveGateway implements MoveAPIGateway {
+export class PokeAPIMoveGateway implements IMoveGateway {
   private baseUrl = 'https://pokeapi.co/api/v2';
   private cache: Map<string, Move> = new Map();
 
@@ -26,7 +36,7 @@ export class PokeAPIMoveGateway implements MoveAPIGateway {
         return this.getDefaultMove(moveName);
       }
 
-      const data = await response.json();
+      const data: PokeAPIMoveData = await response.json();
       
       const move: Move = {
         id: data.name,
@@ -38,7 +48,7 @@ export class PokeAPIMoveGateway implements MoveAPIGateway {
         maxPp: data.pp || 10,
         damageClass: data.damage_class.name as 'physical' | 'special' | 'status',
         priority: data.priority || 0,
-        description: data.effect_entries.find((entry: any) => entry.language.name === 'en')?.short_effect || '',
+        description: data.effect_entries.find((entry) => entry.language.name === 'en')?.short_effect || '',
         effect: getMoveEffect(data.name), // Charger l'effet depuis notre configuration
       };
 

@@ -11,6 +11,11 @@ import { GameInitializationUseCase } from '@/application/usecases/GameInitializa
 import { LeagueUseCase } from '@/application/usecases/LeagueUseCase';
 import { UseItemUseCase } from '@/application/usecases/UseItemUseCase';
 import { ServiceFactory } from './ServiceFactory';
+import { IBattleUseCase } from '@/domain/ports/IBattleUseCase';
+import { IRewardsUseCase } from '@/domain/ports/IRewardsUseCase';
+import { IGameInitializationUseCase } from '@/domain/ports/IGameInitializationUseCase';
+import { ILeagueUseCase } from '@/domain/ports/ILeagueUseCase';
+import { IUseItemUseCase } from '@/domain/ports/IUseItemUseCase';
 
 /**
  * Factory pour créer les use cases avec injection de dépendances
@@ -19,7 +24,7 @@ export class UseCaseFactory {
   /**
    * Crée une instance de BattleUseCase avec ses dépendances
    */
-  static createBattleUseCase(): BattleUseCase {
+  static createBattleUseCase(): IBattleUseCase {
     return new BattleUseCase(
       ServiceFactory.getRandomGenerator(),
       ServiceFactory.getMathService()
@@ -29,7 +34,7 @@ export class UseCaseFactory {
   /**
    * Crée une instance de RewardsUseCase avec ses dépendances
    */
-  static createRewardsUseCase(): RewardsUseCase {
+  static createRewardsUseCase(): IRewardsUseCase {
     return new RewardsUseCase(
       ServiceFactory.getRandomGenerator(),
       ServiceFactory.getMathService()
@@ -39,7 +44,7 @@ export class UseCaseFactory {
   /**
    * Crée une instance de GameInitializationUseCase avec ses dépendances
    */
-  static createGameInitializationUseCase(): GameInitializationUseCase {
+  static createGameInitializationUseCase(): IGameInitializationUseCase {
     return new GameInitializationUseCase(
       ServiceFactory.getRandomGenerator(),
       ServiceFactory.getDateProvider()
@@ -49,7 +54,7 @@ export class UseCaseFactory {
   /**
    * Crée une instance de LeagueUseCase avec ses dépendances
    */
-  static createLeagueUseCase(): LeagueUseCase {
+  static createLeagueUseCase(): ILeagueUseCase {
     return new LeagueUseCase(
       ServiceFactory.getRandomGenerator(),
       ServiceFactory.getMathService()
@@ -59,7 +64,7 @@ export class UseCaseFactory {
   /**
    * Crée une instance de UseItemUseCase avec ses dépendances
    */
-  static createUseItemUseCase(): UseItemUseCase {
+  static createUseItemUseCase(): IUseItemUseCase {
     return new UseItemUseCase(
       ServiceFactory.getMathService()
     );
