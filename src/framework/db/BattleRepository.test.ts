@@ -1,5 +1,5 @@
 import { BattleRepository } from './BattleRepository';
-import { Battle } from '../../../domain/entities/Battle';
+import { Battle } from '../../domain/entities/Battle';
 
 describe('BattleRepository', () => {
   let repository: BattleRepository;
@@ -20,6 +20,7 @@ describe('BattleRepository', () => {
   it('should find battle by id', async () => {
     const battle = new Battle();
     battle.id = '1';
+    battle.status = 'ongoing';
     await repository.save(battle);
     const found = await repository.findById('1');
     expect(found).toBeDefined();

@@ -26,7 +26,13 @@ describe('SelectRewardUseCase', () => {
   });
 
   it('should replace pokemon if team is full', () => {
-    trainer.team = [new Pokemon(), new Pokemon(), new Pokemon(), new Pokemon(), new Pokemon(), new Pokemon()]; // 6 pokemon
+    const p1 = new Pokemon(); p1.id = '1';
+    const p2 = new Pokemon(); p2.id = '2';
+    const p3 = new Pokemon(); p3.id = '3';
+    const p4 = new Pokemon(); p4.id = '4';
+    const p5 = new Pokemon(); p5.id = '5';
+    const p6 = new Pokemon(); p6.id = '6';
+    trainer.team = [p1, p2, p3, p4, p5, p6]; // 6 pokemon
     const initialTeam = [...trainer.team];
     useCase.execute(trainer, rewards, { type: 'pokemon', index: 0 });
     expect(trainer.team.length).toBe(6);

@@ -14,7 +14,7 @@ describe('DamageCalculator', () => {
 
   it('should calculate increased damage for super effective types', () => {
     const damage = calculator.calculate('fire', 'grass', 50);
-    expect(damage).toBe(75); // 50 * 1.5
+    expect(damage).toBe(100); // 50 * 2
   });
 
   it('should calculate decreased damage for not very effective types', () => {

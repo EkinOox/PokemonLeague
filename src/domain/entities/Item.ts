@@ -3,4 +3,5 @@ export class Item {
   name!: string;
   type!: 'healing' | 'boost' | 'ball' | 'other';
   effect!: number; // healing amount, boost multiplier, etc.
+  description?: string;
 }

@@ -1,5 +1,5 @@
 import { PokemonRepository } from './PokemonRepository';
-import { Pokemon } from '../../../domain/entities/Pokemon';
+import { Pokemon } from '../../domain/entities/Pokemon';
 
 describe('PokemonRepository', () => {
   let repository: PokemonRepository;
@@ -20,6 +20,7 @@ describe('PokemonRepository', () => {
   it('should find pokemon by id', async () => {
     const pokemon = new Pokemon();
     pokemon.id = '1';
+    pokemon.name = 'Pikachu';
     await repository.save(pokemon);
     const found = await repository.findById('1');
     expect(found).toBeDefined();
