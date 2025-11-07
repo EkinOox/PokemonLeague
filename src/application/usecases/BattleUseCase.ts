@@ -485,9 +485,9 @@ export class BattleUseCase {
 
     // Chance de guérison naturelle du statut (90% pour test, normalement 10%)
     const healRoll = this.randomGenerator.generate();
-    console.log(`🎲 Roll de guérison: ${healRoll} (seuil: 0.4)`);
+    console.log(`🎲 Roll de guérison: ${healRoll} (seuil: 0.3)`);
 
-    if (healRoll < 0.4) {
+    if (healRoll < 0.3) {
       const statusNames: Record<string, string> = {
         'burn': 'brûlure',
         'freeze': 'gel',
