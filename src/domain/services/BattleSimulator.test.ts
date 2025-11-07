@@ -2,6 +2,7 @@ import { BattleSimulator } from './BattleSimulator';
 import { Battle } from '../entities/Battle';
 import { Trainer } from '../entities/Trainer';
 import { Pokemon } from '../entities/Pokemon';
+import { MockRandomGenerator } from '../../application/usecases/__mocks__/testHelpers';
 
 describe('BattleSimulator', () => {
   let simulator: BattleSimulator;
@@ -10,9 +11,15 @@ describe('BattleSimulator', () => {
   let trainer2: Trainer;
   let pokemon1: Pokemon;
   let pokemon2: Pokemon;
+  let mockRandomGenerator: MockRandomGenerator;
 
   beforeEach(() => {
-    simulator = new BattleSimulator();
+    mockRandomGenerator = new MockRandomGenerator();
+    
+    // Use real random for battle simulations (they test randomness)
+    mockRandomGenerator.useReal();
+    
+    simulator = new BattleSimulator(mockRandomGenerator);
     trainer1 = new Trainer();
     trainer1.id = '1';
     trainer1.name = 'Ash';

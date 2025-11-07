@@ -1,5 +1,5 @@
-import { StartBattleUseCase } from '../../app/usecases/StartBattleUseCase';
-import { AttackUseCase } from '../../app/usecases/AttackUseCase';
+import { StartBattleUseCase } from '@/application/usecases/StartBattleUseCase';
+import { AttackUseCase } from '@/application/usecases/AttackUseCase';
 import { ITrainerRepository } from '../../domain/ports/ITrainerRepository';
 import { IBattleRepository } from '../../domain/ports/IBattleRepository';
 import { IPokemonRepository } from '../../domain/ports/IPokemonRepository';

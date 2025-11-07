@@ -1,11 +1,12 @@
 import { Battle } from '../entities/Battle';
 import { Trainer } from '../entities/Trainer';
 import { DamageCalculator } from './DamageCalculator';
+import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 
 export class BattleSimulator {
   private damageCalculator: DamageCalculator;
 
-  constructor() {
+  constructor(private randomGenerator: IRandomGenerator) {
     this.damageCalculator = new DamageCalculator();
   }
 
@@ -30,7 +31,7 @@ export class BattleSimulator {
     let damage = this.damageCalculator.calculate(attackerType, defenderType, baseDamage);
 
     // Critical hit (10% chance)
-    const isCritical = Math.random() < 0.1;
+    const isCritical = this.randomGenerator.chance(0.1);
     if (isCritical) {
       damage *= 2;
     }

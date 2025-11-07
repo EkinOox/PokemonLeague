@@ -1,4 +1,4 @@
-import { GetTrainerPokemonsUseCase } from '../../app/usecases/GetTrainerPokemonsUseCase';
+import { GetTrainerPokemonsUseCase } from '@/application/usecases/GetTrainerPokemonsUseCase';
 import { ITrainerRepository } from '../../domain/ports/ITrainerRepository';
 
 interface Request {

@@ -1,10 +1,13 @@
 import { ItemGateway } from './ItemGateway';
+import { RandomGenerator } from '../services/RandomGenerator';
 
 describe('ItemGateway', () => {
   let gateway: ItemGateway;
+  let randomGenerator: RandomGenerator;
 
   beforeEach(() => {
-    gateway = new ItemGateway();
+    randomGenerator = new RandomGenerator();
+    gateway = new ItemGateway(randomGenerator);
   });
 
   it('should get random items', async () => {
@@ -17,8 +20,9 @@ describe('ItemGateway', () => {
   it('should get item by id', async () => {
     const item = await gateway.getItem('potion');
     expect(item).toBeDefined();
-    expect(item.name).toBe('potion');
-    expect(item.type).toBe('healing');
+    expect(item).not.toBeNull();
+    expect(item!.name).toBe('potion');
+    expect(item!.type).toBe('healing');
   });
 
   it('should return null for non-existent item', async () => {
