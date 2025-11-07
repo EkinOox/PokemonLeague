@@ -631,17 +631,15 @@ export default function BattlePage() {
     setShowPokemonSwitcher(false);
     setHasUsedItemOrSwitched(true);
 
-    // Charger les moves du nouveau Pokémon avec PP restaurés
+    // Charger les moves du nouveau Pokémon SANS restaurer les PP
+    // Les PP doivent rester dans leur état actuel
     const newPokemonMoves = await moveGateway.getMovesByNames(pokemon.moves);
-    const restoredMoves = newPokemonMoves.map(move => ({
-      ...move,
-      pp: move.maxPp
-    }));
-    setPlayerMoves(restoredMoves);
+    setPlayerMoves(newPokemonMoves);
 
     // Réorganiser l'équipe pour mettre le nouveau Pokémon en position 0 (actif)
+    // IMPORTANT: Ne pas modifier les HP ou l'état du Pokémon
     const newTeam = [
-      pokemon,
+      pokemon, // Garder le Pokémon tel quel avec ses HP actuels
       ...gameState.currentBattle.trainer1.team.filter(p => p.id !== pokemon.id)
     ];
 
@@ -744,6 +742,8 @@ export default function BattlePage() {
             opponentHpPercentage={opponentHpPercentage}
             isPlayerTurn={isPlayerTurn}
             battleMessage={battleMessage}
+            playerTeam={gameState.currentBattle.trainer1.team}
+            opponentTeam={gameState.currentBattle.trainer2.team}
           />
         </div>
 

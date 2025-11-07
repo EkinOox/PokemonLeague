@@ -1,5 +1,6 @@
 import { Item } from '@/domain/entities/Item';
 import { Pokemon } from '@/domain/entities/Pokemon';
+import { Trainer } from '@/domain/entities/Trainer';
 import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
 
 export interface ItemReward {
@@ -82,6 +83,32 @@ export class RewardsUseCase {
   }
 
   /**
+   * Détermine le message de félicitations selon les performances
+   */
+  getVictoryMessage(victorySpe: 'quick' | 'normal' | 'hard', opponentName: string): string {
+    const messages = {
+      quick: [
+        `Victoire écrasante contre ${opponentName} !`,
+        `Domination totale ! ${opponentName} n'a rien pu faire !`,
+        `Performance parfaite contre ${opponentName} !`,
+      ],
+      normal: [
+        `Victoire contre ${opponentName} !`,
+        `Vous avez battu ${opponentName} !`,
+        `${opponentName} est vaincu !`,
+      ],
+      hard: [
+        `Victoire difficile contre ${opponentName}...`,
+        `Vous avez réussi à battre ${opponentName} de justesse !`,
+        `Combat serré, mais victoire contre ${opponentName} !`,
+      ],
+    };
+
+    const messageList = messages[victorySpe];
+    return messageList[Math.floor(Math.random() * messageList.length)];
+  }
+
+  /**
    * Calcule les points de base selon le niveau de l'adversaire
    */
   private calculateBasePoints(opponentLevel: number, victorySpe: 'quick' | 'normal' | 'hard'): number {
@@ -102,24 +129,24 @@ export class RewardsUseCase {
    */
   private generateRandomItems(level: number, count: number): Item[] {
     const allItems: Item[] = [
-      { id: 'potion', name: 'Potion', type: 'healing', effect: 20, description: 'Restaure 20 HP' },
-      { id: 'super-potion', name: 'Super Potion', type: 'healing', effect: 50, description: 'Restaure 50 HP' },
-      { id: 'hyper-potion', name: 'Hyper Potion', type: 'healing', effect: 100, description: 'Restaure 100 HP' },
-      { id: 'revive', name: 'Rappel', type: 'other', effect: 50, description: 'Ranime un Pokémon K.O. à 50% HP' },
-      { id: 'full-heal', name: 'Guérison', type: 'other', effect: 0, description: 'Soigne tous les statuts' },
-      { id: 'antidote', name: 'Antidote', type: 'other', effect: 0, description: 'Soigne l\'empoisonnement' },
-      { id: 'awakening', name: 'Réveil', type: 'other', effect: 0, description: 'Réveille un Pokémon endormi' },
-      { id: 'paralyze-heal', name: 'Anti-Para', type: 'other', effect: 0, description: 'Soigne la paralysie' },
-      { id: 'burn-heal', name: 'Anti-Brûle', type: 'other', effect: 0, description: 'Soigne les brûlures' },
-      { id: 'ice-heal', name: 'Antigel', type: 'other', effect: 0, description: 'Soigne le gel' },
+      { id: 'potion', name: 'Potion', type: 'healing', effect: 20, description: 'Restaure 20 HP', image: '/images/objets/potion.png' },
+      { id: 'super-potion', name: 'Super Potion', type: 'healing', effect: 50, description: 'Restaure 50 HP', image: '/images/objets/super-potion.png' },
+      { id: 'hyper-potion', name: 'Hyper Potion', type: 'healing', effect: 100, description: 'Restaure 100 HP', image: '/images/objets/hyper-potion.png' },
+      { id: 'revive', name: 'Rappel', type: 'other', effect: 50, description: 'Ranime un Pokémon K.O. à 50% HP', image: '/images/objets/rappel.png' },
+      { id: 'full-heal', name: 'Guérison', type: 'other', effect: 0, description: 'Soigne tous les statuts', image: '/images/objets/guerison.png' },
+      { id: 'antidote', name: 'Antidote', type: 'other', effect: 0, description: 'Soigne l\'empoisonnement', image: '/images/objets/antidote.png' },
+      { id: 'awakening', name: 'Réveil', type: 'other', effect: 0, description: 'Réveille un Pokémon endormi', image: '/images/objets/reveil.png' },
+      { id: 'paralyze-heal', name: 'Anti-Para', type: 'other', effect: 0, description: 'Soigne la paralysie', image: '/images/objets/antipara.png' },
+      { id: 'burn-heal', name: 'Anti-Brûle', type: 'other', effect: 0, description: 'Soigne les brûlures', image: '/images/objets/antibrule.png' },
+      { id: 'ice-heal', name: 'Antigel', type: 'other', effect: 0, description: 'Soigne le gel', image: '/images/objets/antigel.png' },
     ];
 
     // Items de niveau supérieur si le niveau est élevé
     if (level >= 30) {
       allItems.push(
-        { id: 'max-potion', name: 'Potion Max', type: 'healing', effect: 999, description: 'Restaure tous les HP' },
+        { id: 'max-potion', name: 'Potion Max', type: 'healing', effect: 999, description: 'Restaure tous les HP', image: '/images/objets/potion-max.png' },
         { id: 'full-restore', name: 'Restauration Totale', type: 'healing', effect: 999, description: 'Restaure HP et soigne statuts' },
-        { id: 'max-revive', name: 'Rappel Max', type: 'other', effect: 100, description: 'Ranime un Pokémon K.O. à 100% HP' }
+        { id: 'max-revive', name: 'Rappel Max', type: 'other', effect: 100, description: 'Ranime un Pokémon K.O. à 100% HP', image: '/images/objets/rappel-max.png' }
       );
     }
 
@@ -215,28 +242,16 @@ export class RewardsUseCase {
   }
 
   /**
-   * Détermine le message de félicitations selon les performances
+   * Remplace un Pokémon dans l'équipe du joueur
    */
-  getVictoryMessage(victorySpe: 'quick' | 'normal' | 'hard', opponentName: string): string {
-    const messages = {
-      quick: [
-        `Victoire écrasante contre ${opponentName} !`,
-        `Domination totale ! ${opponentName} n'a rien pu faire !`,
-        `Performance parfaite contre ${opponentName} !`,
-      ],
-      normal: [
-        `Victoire contre ${opponentName} !`,
-        `Vous avez battu ${opponentName} !`,
-        `${opponentName} est vaincu !`,
-      ],
-      hard: [
-        `Victoire difficile contre ${opponentName}...`,
-        `Vous avez réussi à battre ${opponentName} de justesse !`,
-        `Combat serré, mais victoire contre ${opponentName} !`,
-      ],
+  replacePokemonInTeam(player: Trainer, pokemonToReplaceId: string, newPokemon: Pokemon): Trainer {
+    const updatedTeam = player.team.map((p: Pokemon) => 
+      p.id === pokemonToReplaceId ? newPokemon : p
+    );
+    
+    return {
+      ...player,
+      team: updatedTeam
     };
-
-    const messageList = messages[victorySpe];
-    return messageList[Math.floor(Math.random() * messageList.length)];
   }
 }

@@ -26,10 +26,10 @@ export class PokemonAPIGateway {
       pokemon.currentHp = pokemon.stats.hp;
       pokemon.maxHp = pokemon.stats.hp;
       
-      // Les talents deviennent directement des attaques spéciales
-      // Plus besoin de mapping complexe - on utilise les noms français comme moves uniques
-      const talents = data.talents?.map((t: any) => t.name.toLowerCase().replace(/\s+/g, '-')) || [];
-      pokemon.moves = this.getMixedMoves(talents, data.types?.map((t: any) => t.name) || ['normal']);
+      // Les talents sont des capacités passives, pas des mouvements
+      // On utilise seulement des mouvements par défaut basés sur les types
+      const types = data.types?.map((t: any) => t.name) || ['normal'];
+      pokemon.moves = this.getDefaultMovesForTypes(types);
       
       // Essayer plusieurs sources de sprites
       const tyradexSprite = data.sprites?.regular;
@@ -92,40 +92,6 @@ export class PokemonAPIGateway {
 
 
 
-  private getMixedMoves(talents: string[], types: string[]): string[] {
-    const moves: string[] = [];
-    
-    // Ajouter tous les talents (jusqu'à 4)
-    const talentMoves = talents.slice(0, 4);
-    moves.push(...talentMoves);
-
-    // Si on n'a pas 4 moves, compléter avec des attaques aléatoires basées sur les types
-    if (moves.length < 4) {
-      const randomMoves = this.getDefaultMovesForTypes(types);
-      const neededMoves = 4 - moves.length;
-      
-      // Ajouter des moves aléatoires qui ne sont pas déjà présents
-      for (const move of randomMoves) {
-        if (!moves.includes(move) && moves.length < 4) {
-          moves.push(move);
-        }
-      }
-      
-      // Si on manque encore de moves, forcer l'ajout
-      while (moves.length < 4 && randomMoves.length > 0) {
-        const randomIndex = Math.floor(Math.random() * randomMoves.length);
-        const randomMove = randomMoves[randomIndex];
-        if (!moves.includes(randomMove)) {
-          moves.push(randomMove);
-        } else {
-          randomMoves.splice(randomIndex, 1);
-        }
-      }
-    }
-
-    return moves.slice(0, 4); // S'assurer qu'on retourne exactement 4 moves
-  }
-
   private getDefaultMovesForTypes(types: string[]): string[] {
     // Map de moves par type avec leur niveau de puissance (noms anglais pour PokeAPI)
     // Format: [move faible, move moyen, move fort, move très fort]
@@ -148,29 +114,41 @@ export class PokemonAPIGateway {
       dark: ['bite', 'feint-attack', 'crunch', 'dark-pulse'],
       steel: ['metal-claw', 'iron-head', 'flash-cannon', 'meteor-mash'],
       fairy: ['fairy-wind', 'draining-kiss', 'dazzling-gleam', 'moonblast'],
+      // Support pour les types français (Tyradex)
+      'feu': ['ember', 'flame-wheel', 'flamethrower', 'fire-blast'],
+      'eau': ['water-gun', 'bubble-beam', 'surf', 'hydro-pump'],
+      'plante': ['vine-whip', 'razor-leaf', 'energy-ball', 'solar-beam'],
+      'électrik': ['thunder-shock', 'spark', 'thunderbolt', 'thunder'],
+      'glace': ['powder-snow', 'ice-beam', 'blizzard', 'ice-punch'],
+      'combat': ['low-kick', 'karate-chop', 'brick-break', 'close-combat'],
+      'sol': ['mud-slap', 'bulldoze', 'earthquake', 'earth-power'],
+      'vol': ['gust', 'wing-attack', 'air-slash', 'brave-bird'],
+      'psy': ['confusion', 'psybeam', 'psychic', 'future-sight'],
+      'insecte': ['bug-bite', 'fury-cutter', 'x-scissor', 'bug-buzz'],
+      'roche': ['rock-throw', 'rock-tomb', 'rock-slide', 'stone-edge'],
+      'spectre': ['lick', 'shadow-sneak', 'shadow-ball', 'shadow-claw'],
+      'ténèbres': ['bite', 'feint-attack', 'crunch', 'dark-pulse'],
+      'acier': ['metal-claw', 'iron-head', 'flash-cannon', 'meteor-mash'],
+      'fée': ['fairy-wind', 'draining-kiss', 'dazzling-gleam', 'moonblast'],
     };
 
     const moves: string[] = [];
     const primaryType = types[0]?.toLowerCase() || 'normal';
     const primaryMoves = movesByType[primaryType] || movesByType['normal'];
 
-    // Ajouter 1 move faible, 1 move moyen du type principal
-    moves.push(primaryMoves[0]); // Faible (PP élevé)
-    moves.push(primaryMoves[2]); // Fort (PP moyen)
+    // S'assurer qu'il y a au moins 3 mouvements du type principal
+    moves.push(primaryMoves[0]); // Move faible
+    moves.push(primaryMoves[1]); // Move moyen
+    moves.push(primaryMoves[2]); // Move fort
 
-    // Ajouter 1 move du type secondaire si existe, sinon du type principal
+    // Ajouter un 4ème move : soit du type secondaire, soit un move puissant du type principal
     if (types.length > 1) {
       const secondaryType = types[1]?.toLowerCase();
       const secondaryMoves = movesByType[secondaryType] || movesByType['normal'];
-      moves.push(secondaryMoves[1]); // Moyen
+      moves.push(secondaryMoves[1]); // Move moyen du type secondaire
     } else {
-      moves.push(primaryMoves[1]); // Moyen
+      moves.push(primaryMoves[3]); // Move très fort du type principal
     }
-
-    // Ajouter 1 move puissant pour la variété
-    const powerfulMoves = ['hyper-beam', 'giga-impact', 'self-destruct', 'explosion'];
-    const randomPowerful = powerfulMoves[Math.floor(Math.random() * powerfulMoves.length)];
-    moves.push(randomPowerful);
 
     return moves;
   }

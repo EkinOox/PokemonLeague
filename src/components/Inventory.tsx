@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Item } from '@/domain/entities/Item';
 
 interface InventoryProps {
@@ -9,6 +10,17 @@ interface InventoryProps {
 }
 
 export function Inventory({ items, onItemUse, onClose, isOpen }: InventoryProps) {
+  // Grouper les items par ID pour gérer les doublons
+  const groupedItems = items.reduce((acc, item) => {
+    const existing = acc.find(i => i.item.id === item.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      acc.push({ item, quantity: 1 });
+    }
+    return acc;
+  }, [] as Array<{ item: Item; quantity: number }>);
+
   const getItemIcon = (type: string) => {
     const icons: Record<string, string> = {
       potion: '??',
@@ -70,35 +82,50 @@ export function Inventory({ items, onItemUse, onClose, isOpen }: InventoryProps)
 
             {/* Content */}
             <div className="p-6 max-h-[60vh] overflow-y-auto">
-              {items.length === 0 ? (
+              {groupedItems.length === 0 ? (
                 <div className="text-center py-12">
                   <span className="text-6xl mb-4 block">??</span>
                   <p className="pixel-text text-slate-400 text-lg">Votre inventaire est vide</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {items.map((item, index) => (
+                  {groupedItems.map((groupedItem, index) => (
                     <motion.div
-                      key={item.id}
+                      key={groupedItem.item.id}
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`pixel-border border-2 rounded-lg p-4 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer ${getItemRarityColor(item.type)}`}
-                      onClick={() => onItemUse(item)}
+                      className={`pixel-border border-2 rounded-lg p-4 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer ${getItemRarityColor(groupedItem.item.type)}`}
+                      onClick={() => onItemUse(groupedItem.item)}
                     >
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-3xl">{getItemIcon(item.type)}</span>
+                        {groupedItem.item.image ? (
+                          <Image
+                            src={groupedItem.item.image}
+                            alt={groupedItem.item.name}
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                          />
+                        ) : (
+                          <span className="text-3xl">{getItemIcon(groupedItem.item.type)}</span>
+                        )}
                         <div className="flex-1">
-                          <h3 className="pixel-text text-white text-sm font-bold">{item.name}</h3>
-                          <span className={`pixel-text text-xs px-2 py-1 rounded ${getItemRarityColor(item.type)} bg-slate-900`}>
-                            {item.type.toUpperCase()}
+                          <h3 className="pixel-text text-white text-sm font-bold">{groupedItem.item.name}</h3>
+                          <span className={`pixel-text text-xs px-2 py-1 rounded ${getItemRarityColor(groupedItem.item.type)} bg-slate-900`}>
+                            {groupedItem.item.type.toUpperCase()}
                           </span>
                         </div>
+                        {groupedItem.quantity > 1 && (
+                          <div className="pixel-text text-yellow-400 text-lg font-bold bg-slate-900 px-2 py-1 rounded border border-yellow-400">
+                            x{groupedItem.quantity}
+                          </div>
+                        )}
                       </div>
 
-                      {item.description && (
+                      {groupedItem.item.description && (
                         <p className="pixel-text text-slate-400 text-xs leading-tight">
-                          {item.description}
+                          {groupedItem.item.description}
                         </p>
                       )}
 

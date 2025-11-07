@@ -37,6 +37,317 @@ export default function HomePage() {
                          repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)`
       }} />
 
+      {/* SVG décoratifs flottants */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Pokéballs pixel art */}
+        <motion.div
+          className="absolute top-16 left-16"
+          animate={{
+            y: [0, -8, 0],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <svg width="32" height="32" viewBox="0 0 32 32" className="text-red-500 drop-shadow-lg">
+            <rect x="0" y="14" width="32" height="4" fill="currentColor"/>
+            <rect x="14" y="0" width="4" height="32" fill="currentColor"/>
+            <rect x="12" y="12" width="8" height="8" fill="currentColor"/>
+            <rect x="14" y="14" width="4" height="4" fill="white"/>
+            <rect x="15" y="15" width="2" height="2" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        <motion.div
+          className="absolute top-24 right-24"
+          animate={{
+            y: [0, -6, 0],
+            rotate: [0, -3, 3, 0],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 0.5
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" className="text-red-500 drop-shadow-lg">
+            <rect x="0" y="10" width="24" height="4" fill="currentColor"/>
+            <rect x="10" y="0" width="4" height="24" fill="currentColor"/>
+            <rect x="9" y="9" width="6" height="6" fill="currentColor"/>
+            <rect x="10" y="10" width="4" height="4" fill="white"/>
+            <rect x="11" y="11" width="2" height="2" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        {/* Éclairs pixel art */}
+        <motion.div
+          className="absolute top-1/3 right-12"
+          animate={{
+            scale: [1, 1.1, 1],
+            rotate: [0, 2, -2, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <svg width="28" height="32" viewBox="0 0 28 32" className="text-yellow-400 drop-shadow-lg">
+            <rect x="12" y="0" width="4" height="8" fill="currentColor"/>
+            <rect x="8" y="8" width="4" height="4" fill="currentColor"/>
+            <rect x="16" y="8" width="4" height="4" fill="currentColor"/>
+            <rect x="4" y="12" width="4" height="4" fill="currentColor"/>
+            <rect x="20" y="12" width="4" height="4" fill="currentColor"/>
+            <rect x="8" y="16" width="4" height="4" fill="currentColor"/>
+            <rect x="16" y="16" width="4" height="4" fill="currentColor"/>
+            <rect x="12" y="20" width="4" height="8" fill="currentColor"/>
+            <rect x="10" y="28" width="8" height="4" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        <motion.div
+          className="absolute bottom-1/3 left-16"
+          animate={{
+            scale: [1, 0.9, 1],
+            rotate: [0, -3, 3, 0],
+          }}
+          transition={{
+            duration: 2.8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1
+          }}
+        >
+          <svg width="20" height="24" viewBox="0 0 20 24" className="text-yellow-400 drop-shadow-lg">
+            <rect x="8" y="0" width="4" height="6" fill="currentColor"/>
+            <rect x="6" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="10" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="4" y="10" width="4" height="4" fill="currentColor"/>
+            <rect x="12" y="10" width="4" height="4" fill="currentColor"/>
+            <rect x="6" y="14" width="4" height="4" fill="currentColor"/>
+            <rect x="10" y="14" width="4" height="4" fill="currentColor"/>
+            <rect x="8" y="18" width="4" height="6" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        {/* Potions pixel art */}
+        <motion.div
+          className="absolute bottom-24 right-1/3"
+          animate={{
+            y: [0, -4, 0],
+            rotate: [0, 1, -1, 0],
+          }}
+          transition={{
+            duration: 3.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 0.8
+          }}
+        >
+          <svg width="20" height="28" viewBox="0 0 20 28" className="text-pink-500 drop-shadow-lg">
+            <rect x="6" y="0" width="8" height="20" fill="currentColor"/>
+            <rect x="4" y="2" width="12" height="16" fill="currentColor"/>
+            <rect x="8" y="20" width="4" height="8" fill="currentColor"/>
+            <rect x="6" y="24" width="8" height="4" fill="currentColor"/>
+            <rect x="7" y="4" width="6" height="12" fill="white"/>
+            <rect x="8" y="6" width="4" height="8" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        {/* Super Ball pixel art */}
+        <motion.div
+          className="absolute top-1/2 left-1/4"
+          animate={{
+            y: [0, -5, 0],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'linear',
+            delay: 1.2
+          }}
+        >
+          <svg width="28" height="28" viewBox="0 0 28 28" className="text-blue-500 drop-shadow-lg">
+            <rect x="0" y="12" width="28" height="4" fill="currentColor"/>
+            <rect x="12" y="0" width="4" height="28" fill="currentColor"/>
+            <rect x="10" y="10" width="8" height="8" fill="currentColor"/>
+            <rect x="12" y="12" width="4" height="4" fill="white"/>
+            <rect x="13" y="13" width="2" height="2" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        {/* Étoiles pixel art */}
+        <motion.div
+          className="absolute top-20 left-20"
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" className="text-yellow-400 opacity-60">
+            <rect x="10" y="0" width="4" height="4" fill="currentColor"/>
+            <rect x="6" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="14" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="2" y="10" width="4" height="4" fill="currentColor"/>
+            <rect x="18" y="10" width="4" height="4" fill="currentColor"/>
+            <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
+            <rect x="6" y="14" width="4" height="4" fill="currentColor"/>
+            <rect x="14" y="14" width="4" height="4" fill="currentColor"/>
+            <rect x="10" y="18" width="4" height="4" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        <motion.div
+          className="absolute top-32 right-32"
+          animate={{
+            y: [0, -15, 0],
+            rotate: [0, -180, -360],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" className="text-blue-400 opacity-40">
+            <rect x="6" y="0" width="4" height="4" fill="currentColor"/>
+            <rect x="4" y="4" width="4" height="4" fill="currentColor"/>
+            <rect x="8" y="4" width="4" height="4" fill="currentColor"/>
+            <rect x="2" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="10" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="6" y="6" width="4" height="4" fill="currentColor"/>
+            <rect x="4" y="8" width="4" height="4" fill="currentColor"/>
+            <rect x="8" y="8" width="4" height="4" fill="currentColor"/>
+            <rect x="6" y="12" width="4" height="4" fill="currentColor"/>
+          </svg>
+        </motion.div>
+
+        {/* Cercles décoratifs */}
+        <motion.svg
+          className="absolute top-1/4 right-20 w-8 h-8 text-cyan-400 opacity-30"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <circle cx="12" cy="12" r="10" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute bottom-1/3 left-1/4 w-6 h-6 text-pink-400 opacity-40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          animate={{
+            scale: [1, 0.8, 1],
+            rotate: [0, -360],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1.5
+          }}
+        >
+          <circle cx="12" cy="12" r="10" />
+        </motion.svg>
+
+        {/* Formes géométriques */}
+        <motion.svg
+          className="absolute top-1/2 left-10 w-4 h-4 text-green-400 opacity-50"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          animate={{
+            x: [0, 20, 0],
+            y: [0, -10, 0],
+            rotate: [0, 90, 180, 270, 360],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <polygon points="12,2 22,12 12,22 2,12" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute bottom-20 right-1/4 w-5 h-5 text-orange-400 opacity-45"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          animate={{
+            x: [0, -15, 0],
+            y: [0, 15, 0],
+            rotate: [0, -180, -360],
+          }}
+          transition={{
+            duration: 7,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 0.5
+          }}
+        >
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+        </motion.svg>
+
+        {/* Particules lumineuses */}
+        <motion.svg
+          className="absolute top-3/4 right-10 w-3 h-3 text-white opacity-60"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          animate={{
+            scale: [0.5, 1.5, 0.5],
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        >
+          <circle cx="12" cy="12" r="8" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-1/6 left-1/3 w-2 h-2 text-yellow-300 opacity-70"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          animate={{
+            scale: [0.8, 1.2, 0.8],
+            opacity: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1
+          }}
+        >
+          <circle cx="12" cy="12" r="6" />
+        </motion.svg>
+      </div>
+
       <div className="relative z-10 w-full max-w-2xl">
         {/* Logo / Titre */}
         <motion.div

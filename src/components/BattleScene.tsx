@@ -10,6 +10,8 @@ interface BattleSceneProps {
   opponentHpPercentage: number;
   isPlayerTurn: boolean;
   battleMessage: string;
+  playerTeam: Pokemon[];
+  opponentTeam: Pokemon[];
 }
 
 export function BattleScene({
@@ -19,6 +21,8 @@ export function BattleScene({
   opponentHpPercentage,
   isPlayerTurn,
   battleMessage,
+  playerTeam,
+  opponentTeam,
 }: BattleSceneProps) {
   const getHpBarColor = (percentage: number) => {
     if (percentage > 50) return 'bg-green-500';
@@ -31,6 +35,19 @@ export function BattleScene({
       <div className="grid grid-cols-2 gap-8 mb-6">
         {/* Player Side (Left) - Plus mis en avant */}
         <div className="flex flex-col items-start">
+          {/* Player Pokemon Status Indicators */}
+          <div className="flex gap-1 mb-2 justify-start">
+            {playerTeam.map((pokemon, index) => (
+              <img
+                key={pokemon.id}
+                src={pokemon.currentHp > 0 ? '/images/pokeball.png' : '/images/pokeball-vide.png'}
+                alt={pokemon.currentHp > 0 ? 'Pokémon vivant' : 'Pokémon KO'}
+                className="w-6 h-6 object-contain"
+                title={`${pokemon.name} (${pokemon.currentHp > 0 ? 'Vivant' : 'KO'})`}
+              />
+            ))}
+          </div>
+
           <div className="pixel-border border-3 border-green-400 bg-slate-800/90 rounded-lg p-4 mb-3 w-full shadow-[0_0_20px_rgba(34,197,94,0.3)]">
             <div className="flex justify-between items-center mb-2">
               <h3 className="pixel-text text-white text-lg font-bold">{playerPokemon.name}</h3>
@@ -119,6 +136,19 @@ export function BattleScene({
 
         {/* Opponent Side (Right) */}
         <div className="flex flex-col items-end">
+          {/* Opponent Pokemon Status Indicators */}
+          <div className="flex gap-1 mb-2 justify-end">
+            {opponentTeam.map((pokemon, index) => (
+              <img
+                key={pokemon.id}
+                src={pokemon.currentHp > 0 ? '/images/pokeball.png' : '/images/pokeball-vide.png'}
+                alt={pokemon.currentHp > 0 ? 'Pokémon vivant' : 'Pokémon KO'}
+                className="w-6 h-6 object-contain"
+                title={`${pokemon.name} (${pokemon.currentHp > 0 ? 'Vivant' : 'KO'})`}
+              />
+            ))}
+          </div>
+
           <div className="pixel-border border-2 border-slate-600 bg-slate-800/90 rounded-lg p-3 mb-3 w-full">
             <div className="flex justify-between items-center mb-1">
               <h3 className="pixel-text text-white text-base font-bold">{opponentPokemon.name}</h3>
