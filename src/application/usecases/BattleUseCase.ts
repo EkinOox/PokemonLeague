@@ -1,6 +1,6 @@
 import { Battle } from '@/domain/entities/Battle';
 import { Pokemon, StatusCondition, StatModifiers } from '@/domain/entities/Pokemon';
-import { Move, StatusEffect, MoveEffect } from '@/domain/entities/Move';
+import { Move } from '@/domain/entities/Move';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
 import { IBattleUseCase } from '@/domain/ports/IBattleUseCase';
