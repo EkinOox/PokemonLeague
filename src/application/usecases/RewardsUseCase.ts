@@ -138,12 +138,12 @@ export class RewardsUseCase {
       { id: 'super-potion', name: 'Super Potion', type: 'healing', effect: 50, description: 'Restaure 50 HP', image: '/images/objets/super-potion.png' },
       { id: 'hyper-potion', name: 'Hyper Potion', type: 'healing', effect: 100, description: 'Restaure 100 HP', image: '/images/objets/hyper-potion.png' },
       { id: 'revive', name: 'Rappel', type: 'other', effect: 50, description: 'Ranime un Pokémon K.O. à 50% HP', image: '/images/objets/rappel.png' },
-      { id: 'full-heal', name: 'Guérison', type: 'other', effect: 0, description: 'Soigne tous les statuts', image: '/images/objets/guerison.png' },
-      { id: 'antidote', name: 'Antidote', type: 'other', effect: 0, description: 'Soigne l\'empoisonnement', image: '/images/objets/antidote.png' },
-      { id: 'awakening', name: 'Réveil', type: 'other', effect: 0, description: 'Réveille un Pokémon endormi', image: '/images/objets/reveil.png' },
-      { id: 'paralyze-heal', name: 'Anti-Para', type: 'other', effect: 0, description: 'Soigne la paralysie', image: '/images/objets/antipara.png' },
-      { id: 'burn-heal', name: 'Anti-Brûle', type: 'other', effect: 0, description: 'Soigne les brûlures', image: '/images/objets/antibrule.png' },
-      { id: 'ice-heal', name: 'Antigel', type: 'other', effect: 0, description: 'Soigne le gel', image: '/images/objets/antigel.png' },
+      { id: 'full-heal', name: 'Guérison', type: 'status-heal', effect: 0, description: 'Soigne tous les statuts', image: '/images/objets/guerison.png' },
+      { id: 'antidote', name: 'Antidote', type: 'status-heal', effect: 0, description: 'Soigne l\'empoisonnement', image: '/images/objets/antidote.png' },
+      { id: 'awakening', name: 'Réveil', type: 'status-heal', effect: 0, description: 'Réveille un Pokémon endormi', image: '/images/objets/reveil.png' },
+      { id: 'paralyze-heal', name: 'Anti-Para', type: 'status-heal', effect: 0, description: 'Soigne la paralysie', image: '/images/objets/antipara.png' },
+      { id: 'burn-heal', name: 'Anti-Brûle', type: 'status-heal', effect: 0, description: 'Soigne les brûlures', image: '/images/objets/antibrule.png' },
+      { id: 'ice-heal', name: 'Antigel', type: 'status-heal', effect: 0, description: 'Soigne le gel', image: '/images/objets/antigel.png' },
     ];
 
     // Items de niveau supérieur si le niveau est élevé
@@ -203,11 +203,29 @@ export class RewardsUseCase {
   private adjustPokemonLevel(pokemon: Pokemon, level: number): Pokemon {
     const levelMultiplier = level / 50;
     
+    // Initialiser currentMoves avec PP max si pas déjà défini
+    let currentMoves = pokemon.currentMoves;
+    if (!currentMoves) {
+      // Créer des moves basiques avec PP max
+      currentMoves = pokemon.moves.map(moveName => ({
+        id: moveName,
+        name: moveName.charAt(0).toUpperCase() + moveName.slice(1).replace('-', ' '),
+        type: 'normal', // Type par défaut, devrait être chargé depuis l'API
+        power: 50,
+        accuracy: 100,
+        pp: 20, // PP max par défaut
+        maxPp: 20,
+        damageClass: 'physical' as const,
+        priority: 0
+      }));
+    }
+    
     return {
       ...pokemon,
       level,
       maxHp: this.mathService.floor(pokemon.stats.hp * (1 + levelMultiplier * 0.5)),
       currentHp: this.mathService.floor(pokemon.stats.hp * (1 + levelMultiplier * 0.5)),
+      currentMoves,
       stats: {
         ...pokemon.stats,
         hp: this.mathService.floor(pokemon.stats.hp * (1 + levelMultiplier * 0.5)),

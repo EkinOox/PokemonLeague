@@ -177,7 +177,7 @@ export class BattleUseCase {
   applyDamage(pokemon: Pokemon, damage: number): Pokemon {
     return {
       ...pokemon,
-      currentHp: Math.max(0, pokemon.currentHp - damage),
+      currentHp: this.mathService.max(0, pokemon.currentHp - damage),
     };
   }
 
@@ -187,7 +187,7 @@ export class BattleUseCase {
   reducePP(move: Move): Move {
     return {
       ...move,
-      pp: Math.max(0, move.pp - 1),
+      pp: this.mathService.max(0, move.pp - 1),
     };
   }
 
@@ -233,7 +233,7 @@ export class BattleUseCase {
     return {
       pokemon: {
         ...attacker,
-        currentHp: Math.max(0, attacker.currentHp - recoilDamage)
+        currentHp: this.mathService.max(0, attacker.currentHp - recoilDamage)
       },
       message: `${attacker.name} subit ${recoilDamage} HP de recul !`
     };
@@ -258,7 +258,7 @@ export class BattleUseCase {
 
     // Calculer le nouveau modificateur (limité entre -6 et +6)
     const currentValue = currentModifiers[stat] || 0;
-    const newValue = Math.max(-6, Math.min(6, currentValue + change));
+    const newValue = this.mathService.max(-6, this.mathService.min(6, currentValue + change));
 
     // Si le modificateur n'a pas changé (déjà au max/min)
     if (newValue === currentValue) {
@@ -381,16 +381,20 @@ export class BattleUseCase {
   canAttackWithStatus(pokemon: Pokemon): { canAttack: boolean; message?: string; pokemon?: Pokemon } {
     if (!pokemon.status) return { canAttack: true };
 
+    console.log(`🎯 Vérification statut pour ${pokemon.name}: ${pokemon.status}`);
+
     switch (pokemon.status) {
       case 'freeze':
         // 20% de chance de dégeler
         if (this.randomGenerator.chance(0.2)) {
+          console.log(`   🧊 ${pokemon.name} dégèle !`);
           return {
             canAttack: true,
             message: `${pokemon.name} a dégelé !`,
             pokemon: { ...pokemon, status: null }
           };
         }
+        console.log(`   🧊 ${pokemon.name} reste gelé`);
         return {
           canAttack: false,
           message: `${pokemon.name} est gelé et ne peut pas attaquer !`
@@ -399,12 +403,14 @@ export class BattleUseCase {
       case 'sleep':
         const turnsLeft = (pokemon.statusTurns || 0) - 1;
         if (turnsLeft <= 0) {
+          console.log(`   😴 ${pokemon.name} se réveille`);
           return {
             canAttack: true,
             message: `${pokemon.name} s'est réveillé !`,
             pokemon: { ...pokemon, status: null, statusTurns: undefined }
           };
         }
+        console.log(`   😴 ${pokemon.name} dort encore (${turnsLeft} tours)`);
         return {
           canAttack: false,
           message: `${pokemon.name} dort...`,
@@ -414,16 +420,19 @@ export class BattleUseCase {
       case 'paralysis':
         // 25% de chance d'être paralysé
         if (this.randomGenerator.chance(0.25)) {
+          console.log(`   ⚡ ${pokemon.name} est paralysé ce tour`);
           return {
             canAttack: false,
             message: `${pokemon.name} est paralysé et ne peut pas attaquer !`
           };
         }
+        console.log(`   ⚡ ${pokemon.name} peut attaquer malgré la paralysie`);
         return { canAttack: true };
 
       case 'confusion':
         const confusionTurnsLeft = (pokemon.statusTurns || 0) - 1;
         if (confusionTurnsLeft <= 0) {
+          console.log(`   😵 ${pokemon.name} n'est plus confus`);
           return {
             canAttack: true,
             message: `${pokemon.name} n'est plus confus !`,
@@ -434,23 +443,31 @@ export class BattleUseCase {
         // 33% de chance de se blesser
         if (this.randomGenerator.chance(0.33)) {
           const selfDamage = this.mathService.floor(pokemon.maxHp * 0.125); // 12.5% des HP max
+          console.log(`   😵 ${pokemon.name} se blesse (${selfDamage} dégâts)`);
           return {
             canAttack: false,
             message: `${pokemon.name} est confus et se blesse lui-même !`,
             pokemon: {
               ...pokemon,
-              currentHp: Math.max(0, pokemon.currentHp - selfDamage),
+              currentHp: this.mathService.max(0, pokemon.currentHp - selfDamage),
               statusTurns: confusionTurnsLeft
             }
           };
         }
         
+        console.log(`   😵 ${pokemon.name} attaque malgré la confusion`);
         return {
           canAttack: true,
           pokemon: { ...pokemon, statusTurns: confusionTurnsLeft }
         };
 
+      case 'poison':
+      case 'badly-poison':
+        console.log(`   ☠️ ${pokemon.name} peut attaquer malgré le poison`);
+        return { canAttack: true };
+
       default:
+        console.log(`   ❓ Statut inconnu: ${pokemon.status}`);
         return { canAttack: true };
     }
   }
@@ -459,25 +476,63 @@ export class BattleUseCase {
    * Applique les dégâts de statut en fin de tour
    */
   applyStatusDamage(pokemon: Pokemon): { pokemon: Pokemon; message?: string } {
-    if (!pokemon.status) return { pokemon };
+    if (!pokemon.status) {
+      // Retourner une copie même si pas de statut pour éviter les mutations
+      return { pokemon: { ...pokemon } };
+    }
+
+    console.log(`🔍 DEBUT applyStatusDamage pour ${pokemon.name} avec statut: ${pokemon.status}`);
+
+    // Chance de guérison naturelle du statut (90% pour test, normalement 10%)
+    const healRoll = this.randomGenerator.generate();
+    console.log(`🎲 Roll de guérison: ${healRoll} (seuil: 0.4)`);
+
+    if (healRoll < 0.4) {
+      const statusNames: Record<string, string> = {
+        'burn': 'brûlure',
+        'freeze': 'gel',
+        'paralysis': 'paralysie',
+        'poison': 'poison',
+        'badly-poison': 'poison grave',
+        'sleep': 'sommeil',
+        'confusion': 'confusion'
+      };
+      
+      console.log(`✨ ${pokemon.name} guérit naturellement de ${statusNames[pokemon.status]} !`);
+      
+      return {
+        pokemon: {
+          ...pokemon,
+          status: null,
+          statusTurns: undefined
+        },
+        message: `${pokemon.name} n'est plus ${statusNames[pokemon.status]} !`
+      };
+    }
+
+    console.log(`❌ Pas de guérison, application des dégâts de statut`);
 
     switch (pokemon.status) {
       case 'burn':
         const burnDamage = this.mathService.floor(pokemon.maxHp * 0.0625); // 6.25% des HP max
+        console.log(`🔥 BRÛLURE: ${pokemon.name} (${pokemon.currentHp} HP) subit ${burnDamage} dégâts`);
         return {
           pokemon: {
             ...pokemon,
-            currentHp: Math.max(0, pokemon.currentHp - burnDamage)
+            currentHp: this.mathService.max(0, pokemon.currentHp - burnDamage)
           },
           message: `${pokemon.name} souffre de sa brûlure !`
         };
 
       case 'poison':
         const poisonDamage = this.mathService.floor(pokemon.maxHp * 0.125); // 12.5% des HP max
+        console.log(`☠️ POISON: ${pokemon.name} (${pokemon.currentHp} HP) subit ${poisonDamage} dégâts`);
+        const newHp = this.mathService.max(0, pokemon.currentHp - poisonDamage);
+        console.log(`   HP après poison: ${newHp}`);
         return {
           pokemon: {
             ...pokemon,
-            currentHp: Math.max(0, pokemon.currentHp - poisonDamage)
+            currentHp: newHp
           },
           message: `${pokemon.name} souffre du poison !`
         };
@@ -486,17 +541,39 @@ export class BattleUseCase {
         // Le poison aggravé augmente à chaque tour
         const badlyPoisonTurns = (pokemon.statusTurns || 0) + 1;
         const badlyPoisonDamage = this.mathService.floor(pokemon.maxHp * 0.0625 * badlyPoisonTurns);
+        console.log(`☠️ POISON AGGRAVÉ: ${pokemon.name} (${pokemon.currentHp} HP) subit ${badlyPoisonDamage} dégâts (tour ${badlyPoisonTurns})`);
         return {
           pokemon: {
             ...pokemon,
-            currentHp: Math.max(0, pokemon.currentHp - badlyPoisonDamage),
+            currentHp: this.mathService.max(0, pokemon.currentHp - badlyPoisonDamage),
             statusTurns: badlyPoisonTurns
           },
           message: `${pokemon.name} souffre du poison aggravé !`
         };
 
+      case 'paralysis':
+        // La paralysie reste active mais ne fait pas de dégâts
+        console.log(`⚡ PARALYSIE: ${pokemon.name} reste paralysé`);
+        return { pokemon: { ...pokemon } };
+
+      case 'freeze':
+        // Le gel reste actif mais ne fait pas de dégâts
+        console.log(`🧊 GEL: ${pokemon.name} reste gelé`);
+        return { pokemon: { ...pokemon } };
+
+      case 'sleep':
+        // Le sommeil est géré dans canAttackWithStatus
+        console.log(`😴 SOMMEIL: ${pokemon.name} dort`);
+        return { pokemon: { ...pokemon } };
+
+      case 'confusion':
+        // La confusion est gérée dans canAttackWithStatus
+        console.log(`😵 CONFUSION: ${pokemon.name} est confus`);
+        return { pokemon: { ...pokemon } };
+
       default:
-        return { pokemon };
+        // Retourner une copie même pour les statuts non gérés
+        return { pokemon: { ...pokemon } };
     }
   }
 
@@ -550,7 +627,7 @@ export class BattleUseCase {
       case 'heal':
         if (move.effect.healPercent) {
           const healAmount = this.mathService.floor(defender.maxHp * (move.effect.healPercent / 100));
-          const newHp = Math.min(defender.maxHp, defender.currentHp + healAmount);
+          const newHp = this.mathService.min(defender.maxHp, defender.currentHp + healAmount);
           
           return {
             defender: {

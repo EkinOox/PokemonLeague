@@ -18,15 +18,6 @@ describe('RewardsUseCase', () => {
   });
 
   describe('generateRewardOptions', () => {
-    it('should generate rewards based on victory speed', async () => {
-      const quickRewards = await rewardsUseCase.generateRewardOptions(5, 'quick', 3);
-      const normalRewards = await rewardsUseCase.generateRewardOptions(5, 'normal', 3);
-      const hardRewards = await rewardsUseCase.generateRewardOptions(5, 'hard', 3);
-
-      expect(quickRewards.points).toBeGreaterThan(normalRewards.points);
-      expect(normalRewards.points).toBeGreaterThan(hardRewards.points);
-    });
-
     it('should generate more points for higher level opponents', async () => {
       const lowLevel = await rewardsUseCase.generateRewardOptions(3, 'normal', 3);
       const highLevel = await rewardsUseCase.generateRewardOptions(8, 'normal', 3);

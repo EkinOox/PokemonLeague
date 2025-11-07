@@ -141,11 +141,6 @@ export function Inventory({ items, onItemUse, onClose, isOpen }: InventoryProps)
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-800 p-4 border-t-4 border-yellow-400">
-              <p className="pixel-text text-slate-400 text-sm text-center">
-                Sélectionnez un objet à utiliser pendant ce tour
-              </p>
-            </div>
           </motion.div>
         </>
       )}

@@ -1,3 +1,5 @@
+import { Move } from './Move';
+
 export type StatusCondition = 'burn' | 'freeze' | 'paralysis' | 'poison' | 'sleep' | 'badly-poison' | 'confusion' | null;
 
 export interface StatModifiers {
@@ -24,6 +26,7 @@ export class Pokemon {
   currentHp!: number;
   maxHp!: number;
   moves!: string[];
+  currentMoves?: Move[]; // Moves avec PP actuels, pour persister les PP entre combats
   sprite?: string; // URL du sprite du Pokemon
   emoji?: string; // Emoji de secours si pas de sprite
   status?: StatusCondition; // Statut actuel du Pokémon

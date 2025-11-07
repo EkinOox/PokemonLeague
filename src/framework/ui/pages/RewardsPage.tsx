@@ -19,6 +19,7 @@ export function RewardsPage() {
   const [selectedItems, setSelectedItems] = useState<ItemReward[]>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonReward | null>(null);
   const [pokemonToReplace, setPokemonToReplace] = useState<Pokemon | null>(null);
+  const [replacementConfirmed, setReplacementConfirmed] = useState(false);
 
   // Utiliser le factory pour créer le use case avec injection de dépendances
   const rewardsUseCase = UseCaseFactory.createRewardsUseCase();
@@ -82,7 +83,7 @@ export function RewardsPage() {
     setSelectedPokemon(pokemonReward);
   };
 
-  const confirmPokemonReplacement = () => {
+    const confirmPokemonReplacement = () => {
     if (selectedPokemon && pokemonToReplace && gameState.player) {
       // Remplacer le Pokémon dans l'équipe
       const updatedTeam = gameState.player.team.map(p => 
@@ -94,7 +95,11 @@ export function RewardsPage() {
         team: updatedTeam
       });
       
-      finishRewards();
+      // Marquer qu'on a sélectionné un Pokémon pour l'afficher dans le résumé
+      setSelectedPokemon(selectedPokemon);
+      
+      // Marquer que le remplacement est confirmé
+      setReplacementConfirmed(true);
     }
   };
 
@@ -335,7 +340,7 @@ export function RewardsPage() {
                         }
                       `}
                     >
-                      <span className="pixel-text text-white text-xl">SÉLECTIONNER</span>
+                      <span className="pixel-text text-white text-xl">REMPLACER</span>
                     </button>
                     
                     <button
@@ -349,61 +354,87 @@ export function RewardsPage() {
               ) : (
                 <div className="pixel-border border-4 border-yellow-400 bg-slate-900/90 rounded-lg p-6 mb-6">
                   <h2 className="pixel-text text-yellow-400 text-2xl mb-6 text-center">
-                    QUEL POKÉMON REMPLACER ?
+                    {replacementConfirmed ? 'POKÉMON REMPLACÉ !' : 'QUEL POKÉMON REMPLACER ?'}
                   </h2>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                    {gameState.player?.team.map((pokemon, index) => (
-                      <motion.div
-                        key={pokemon.id}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => setPokemonToReplace(pokemon)}
-                        className={`
-                          pixel-border border-4 rounded-lg p-4 cursor-pointer transition-all
-                          ${pokemonToReplace?.id === pokemon.id
-                            ? 'border-red-400 bg-red-900/60'
-                            : 'border-slate-600 bg-slate-800 hover:border-yellow-400'
-                          }
-                        `}
-                      >
-                        <div className="text-center">
-                          {pokemon.sprite && (
-                            <img
-                              src={pokemon.sprite}
-                              alt={pokemon.name}
-                              className="w-16 h-16 mx-auto mb-1"
-                            />
-                          )}
-                          <h3 className="pixel-text text-white text-sm">{pokemon.name}</h3>
-                          <p className="pixel-text text-slate-400 text-xs">Niv. {pokemon.level}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                  {replacementConfirmed && (
+                    <div className="text-center mb-6">
+                      <div className="pixel-border border-2 border-green-400 bg-green-900/50 rounded-lg p-4 inline-block">
+                        <p className="pixel-text text-green-400 text-lg">
+                          {selectedPokemon?.pokemon.name} a remplacé {pokemonToReplace?.name} !
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!replacementConfirmed && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                      {gameState.player?.team.map((pokemon, index) => (
+                        <motion.div
+                          key={pokemon.id}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          onClick={() => setPokemonToReplace(pokemon)}
+                          className={`
+                            pixel-border border-4 rounded-lg p-4 cursor-pointer transition-all
+                            ${pokemonToReplace?.id === pokemon.id
+                              ? 'border-red-400 bg-red-900/60'
+                              : 'border-slate-600 bg-slate-800 hover:border-yellow-400'
+                            }
+                          `}
+                        >
+                          <div className="text-center">
+                            {pokemon.sprite && (
+                              <img
+                                src={pokemon.sprite}
+                                alt={pokemon.name}
+                                className="w-16 h-16 mx-auto mb-1"
+                              />
+                            )}
+                            <h3 className="pixel-text text-white text-sm">{pokemon.name}</h3>
+                            <p className="pixel-text text-slate-400 text-xs">Niv. {pokemon.level}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="text-center flex justify-center gap-4">
-                    <button
-                      onClick={confirmPokemonReplacement}
-                      disabled={!pokemonToReplace}
-                      className={`
-                        pixel-border border-4 px-8 py-4 rounded-lg transition-all
-                        ${pokemonToReplace
-                          ? 'border-red-400 bg-red-900 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] cursor-pointer'
-                          : 'border-slate-600 bg-slate-800 opacity-50 cursor-not-allowed'
-                        }
-                      `}
-                    >
-                      <span className="pixel-text text-white text-xl">REMPLACER</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setPokemonToReplace(null)}
-                      className="pixel-border border-4 border-slate-600 bg-slate-800 hover:border-slate-500 px-8 py-4 rounded-lg transition-all"
-                    >
-                      <span className="pixel-text text-white text-xl">RETOUR</span>
-                    </button>
+                    {!replacementConfirmed ? (
+                      <>
+                        <button
+                          onClick={confirmPokemonReplacement}
+                          disabled={!pokemonToReplace}
+                          className={`
+                            pixel-border border-4 px-8 py-4 rounded-lg transition-all
+                            ${pokemonToReplace
+                              ? 'border-red-400 bg-red-900 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] cursor-pointer'
+                              : 'border-slate-600 bg-slate-800 opacity-50 cursor-not-allowed'
+                            }
+                          `}
+                        >
+                          <span className="pixel-text text-white text-xl">REMPLACER</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setPokemonToReplace(null);
+                            setSelectedPokemon(null);
+                          }}
+                          className="pixel-border border-4 border-slate-600 bg-slate-800 hover:border-slate-500 px-8 py-4 rounded-lg transition-all"
+                        >
+                          <span className="pixel-text text-white text-xl">RETOUR</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={finishRewards}
+                        className="pixel-border border-4 border-yellow-400 bg-yellow-900 hover:border-yellow-300 hover:shadow-[0_0_30px_rgba(250,204,21,0.3)] px-8 py-4 rounded-lg transition-all"
+                      >
+                        <span className="pixel-text text-white text-xl">CONTINUER</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -446,9 +477,24 @@ export function RewardsPage() {
                 <p className="pixel-text text-slate-400 text-sm mb-4">
                   {selectedItems.length} objets ajoutés
                 </p>
-                <p className="pixel-text text-slate-300 text-sm">
+                {selectedPokemon && (
+                  <p className="pixel-text text-green-400 text-sm mb-4">
+                    {selectedPokemon.pokemon.name} a rejoint votre équipe !
+                  </p>
+                )}
+                <p className="pixel-text text-slate-300 text-sm mb-6">
                   Retour à la Ligue Pokémon...
                 </p>
+                
+                <button
+                  onClick={() => {
+                    setGamePhase('league');
+                    router.push('/league');
+                  }}
+                  className="pixel-border border-4 border-yellow-400 bg-yellow-900 hover:border-yellow-300 hover:shadow-[0_0_30px_rgba(250,204,21,0.3)] px-8 py-4 rounded-lg transition-all"
+                >
+                  <span className="pixel-text text-white text-xl">CONTINUER</span>
+                </button>
               </div>
             </motion.div>
           )}

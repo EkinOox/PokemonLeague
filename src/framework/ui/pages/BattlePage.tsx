@@ -30,9 +30,13 @@ export function BattlePage() {
   const [opponentMoves, setOpponentMoves] = useState<Move[]>([]);
   const [loadingMoves, setLoadingMoves] = useState(true);
 
+  // Stocker les PP actuels de chaque Pokémon (clé = pokemon.id, valeur = moves avec PP)
+  const [pokemonMovesPP, setPokemonMovesPP] = useState<Record<string, Move[]>>({});
+
   // Utiliser les factories pour créer les use cases et gateways
   const battleUseCase = UseCaseFactory.createBattleUseCase();
   const rewardsUseCase = UseCaseFactory.createRewardsUseCase();
+  const useItemUseCase = UseCaseFactory.createUseItemUseCase();
   const moveGateway = GatewayFactory.getMoveGateway();
 
   // Garder une référence des IDs des Pokémon actuels pour détecter les changements
@@ -48,16 +52,38 @@ export function BattlePage() {
         const playerPokemon = gameState.currentBattle.trainer1.team[0];
         const opponentPokemon = gameState.currentBattle.trainer2.team[0];
         
-        // Charger les moves du joueur SEULEMENT si le Pokémon a changé
-        if (playerPokemon.id !== currentPlayerPokemonId) {
-          const playerMovesData = await moveGateway.getMovesByNames(playerPokemon.moves);
-          // Restaurer les PP à leur maximum au début du combat
-          const restoredPlayerMoves = playerMovesData.map(move => ({
-            ...move,
-            pp: move.maxPp
-          }));
-          setPlayerMoves(restoredPlayerMoves);
-          setCurrentPlayerPokemonId(playerPokemon.id);
+        // Initialiser les PP de tous les Pokémon de l'équipe du joueur
+        const initialPokemonMovesPP: Record<string, Move[]> = {};
+        
+        for (const pokemon of gameState.currentBattle.trainer1.team) {
+          let moves: Move[];
+          if (pokemon.currentMoves && pokemon.currentMoves.length > 0) {
+            // Utiliser les PP actuels persistés
+            moves = pokemon.currentMoves;
+          } else {
+            // Initialiser avec PP max si pas encore défini
+            const movesData = await moveGateway.getMovesByNames(pokemon.moves);
+            moves = movesData.map(move => ({
+              ...move,
+              pp: move.maxPp
+            }));
+          }
+          initialPokemonMovesPP[pokemon.id] = moves;
+        }
+        
+        setPokemonMovesPP(initialPokemonMovesPP);
+        
+        // Charger les moves du joueur actuel
+        setPlayerMoves(initialPokemonMovesPP[playerPokemon.id] || []);
+        setCurrentPlayerPokemonId(playerPokemon.id);
+        
+        // Mettre à jour les currentMoves des Pokémon dans gameState
+        if (gameState.player) {
+          const updatedTeam = gameState.player.team.map(pokemon => {
+            const moves = initialPokemonMovesPP[pokemon.id];
+            return moves ? { ...pokemon, currentMoves: moves } : pokemon;
+          });
+          updatePlayer({ ...gameState.player, team: updatedTeam });
         }
         
         // Charger les moves de l'adversaire SEULEMENT si le Pokémon a changé
@@ -143,6 +169,21 @@ export function BattlePage() {
         m.id === move.id ? battleUseCase.reducePP(m) : m
       );
       setPlayerMoves(updatedPlayerMoves);
+      
+      // Mettre à jour les PP dans le stockage global
+      const currentPokemon = gameState.currentBattle.trainer1.team[0];
+      setPokemonMovesPP(prev => ({
+        ...prev,
+        [currentPokemon.id]: updatedPlayerMoves
+      }));
+      
+      // Mettre à jour currentMoves du Pokémon dans gameState
+      if (gameState.player) {
+        const updatedTeam = gameState.player.team.map(p => 
+          p.id === currentPokemon.id ? { ...p, currentMoves: updatedPlayerMoves } : p
+        );
+        updatePlayer({ ...gameState.player, team: updatedTeam });
+      }
 
       // Calculer les dégâts avec critique et efficacité
       const { damage, isCritical, effectiveness } = battleUseCase.calculateDamage(
@@ -247,68 +288,125 @@ export function BattlePage() {
         return;
       }
 
-      // Appliquer les dégâts de statut à l'adversaire
-      const opponentStatusDamage = battleUseCase.applyStatusDamage(opponentPokemon);
-      if (opponentStatusDamage.message) {
-        opponentPokemon = opponentStatusDamage.pokemon;
-        
-        // Mettre à jour les HP de l'adversaire
-        const statusDamageTeam = gameState.currentBattle.trainer2.team.map((p: Pokemon, index: number) =>
-          index === 0 ? opponentPokemon : p
-        );
-        updatedBattle = {
-          ...updatedBattle,
-          trainer2: { ...updatedBattle.trainer2, team: statusDamageTeam }
-        };
-        updateCurrentBattle(updatedBattle);
-        
-        setBattleMessage(opponentStatusDamage.message);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Vérifier si l'adversaire est KO à cause du statut
-        if (opponentPokemon.currentHp <= 0) {
-          setBattleMessage(`${opponentPokemon.name} est K.O. à cause de son statut !`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const nextOpponentPokemon = battleUseCase.getFirstAlivePokemon(updatedBattle.trainer2.team);
-          if (nextOpponentPokemon) {
-            setBattleMessage(`${gameState.currentBattle.trainer2.name} envoie ${nextOpponentPokemon.name} !`);
-            const newOpponentTeam = [
-              nextOpponentPokemon,
-              ...updatedBattle.trainer2.team.filter(p => p.id !== nextOpponentPokemon.id)
-            ];
-            const battleWithNewOpponent = {
-              ...updatedBattle,
-              trainer2: { ...updatedBattle.trainer2, team: newOpponentTeam }
-            };
-            updateCurrentBattle(battleWithNewOpponent);
-            
-            const newOpponentMoves = await moveGateway.getMovesByNames(nextOpponentPokemon.moves);
-            const restoredMoves = newOpponentMoves.map(m => ({ ...m, pp: m.maxPp }));
-            setOpponentMoves(restoredMoves);
-            
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setIsPlayerTurn(true);
-            setBattlePhase('selecting');
-            setBattleMessage('À votre tour !');
-          } else {
-            setBattleMessage('Vous avez gagné le combat !');
-            setTimeout(() => {
-              setBattlePhase('finished');
-              handleVictory();
-            }, 2000);
-          }
-          return;
-        }
-      }
-
-      // Tour de l'adversaire
+      // Tour de l'adversaire (qui gère aussi les dégâts de statut en fin de tour)
       await handleOpponentTurn(updatedBattle);
 
     } catch (error) {
       console.error('Erreur lors de l\'attaque:', error);
       setBattleMessage('Une erreur est survenue...');
       setTimeout(() => setBattlePhase('selecting'), 2000);
+    }
+  };
+
+  // Appliquer les dégâts de statut aux deux Pokémon à la fin du tour
+  const applyEndOfTurnStatusDamage = async (currentBattle: any) => {
+    let playerPokemon = currentBattle.trainer1.team[0];
+    let opponentPokemon = currentBattle.trainer2.team[0];
+    let battleUpdated = false;
+
+    console.log(`🔄 Fin du tour - Statuts:`);
+    console.log(`   Joueur: ${playerPokemon.name} - Status: ${playerPokemon.status} - HP: ${playerPokemon.currentHp}/${playerPokemon.maxHp}`);
+    console.log(`   Adversaire: ${opponentPokemon.name} - Status: ${opponentPokemon.status} - HP: ${opponentPokemon.currentHp}/${opponentPokemon.maxHp}`);
+
+    // Appliquer les dégâts de statut au Pokémon du joueur
+    const playerStatusDamage = battleUseCase.applyStatusDamage(playerPokemon);
+    if (playerStatusDamage.message) {
+      console.log(`💚 Statut joueur appliqué: ${playerStatusDamage.message}`);
+      playerPokemon = playerStatusDamage.pokemon;
+      setBattleMessage(playerStatusDamage.message);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      battleUpdated = true;
+
+      // Vérifier si le joueur est KO à cause du statut
+      if (playerPokemon.currentHp <= 0) {
+        setBattleMessage(`${playerPokemon.name} est K.O. à cause de son statut !`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const nextPlayerPokemon = battleUseCase.getFirstAlivePokemon(currentBattle.trainer1.team);
+        if (nextPlayerPokemon) {
+          setBattleMessage('Choisissez votre prochain Pokémon !');
+          setShowPokemonSwitcher(true);
+          setBattlePhase('switching');
+        } else {
+          setBattleMessage('Tous vos Pokémon sont K.O. ! Vous avez perdu...');
+          setTimeout(() => {
+            restoreAllPokemonPP();
+            endBattle();
+            router.push('/league');
+          }, 3000);
+        }
+        return;
+      }
+    }
+
+    // Appliquer les dégâts de statut au Pokémon adverse
+    const opponentStatusDamage = battleUseCase.applyStatusDamage(opponentPokemon);
+    if (opponentStatusDamage.message) {
+      console.log(`💚 Statut adversaire appliqué: ${opponentStatusDamage.message}`);
+      opponentPokemon = opponentStatusDamage.pokemon;
+      setBattleMessage(opponentStatusDamage.message);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      battleUpdated = true;
+
+      // Vérifier si l'adversaire est KO à cause du statut
+      if (opponentPokemon.currentHp <= 0) {
+        setBattleMessage(`${opponentPokemon.name} est K.O. à cause de son statut !`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const nextOpponentPokemon = battleUseCase.getFirstAlivePokemon(currentBattle.trainer2.team);
+        if (nextOpponentPokemon) {
+          setBattleMessage(`${currentBattle.trainer2.name} envoie ${nextOpponentPokemon.name} !`);
+          const newOpponentTeam = [
+            nextOpponentPokemon,
+            ...currentBattle.trainer2.team.filter((p: Pokemon) => p.id !== nextOpponentPokemon.id)
+          ];
+          const battleWithNewOpponent = {
+            ...currentBattle,
+            trainer2: { ...currentBattle.trainer2, team: newOpponentTeam }
+          };
+          updateCurrentBattle(battleWithNewOpponent);
+
+          const newOpponentMoves = await moveGateway.getMovesByNames(nextOpponentPokemon.moves);
+          const restoredMoves = newOpponentMoves.map((move: Move) => ({ ...move, pp: move.maxPp }));
+          setOpponentMoves(restoredMoves);
+
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          setIsPlayerTurn(true);
+          setBattlePhase('selecting');
+          setBattleMessage('À votre tour !');
+        } else {
+          setBattleMessage('Vous avez gagné le combat !');
+          setTimeout(() => {
+            setBattlePhase('finished');
+            handleVictory();
+          }, 2000);
+        }
+        return;
+      }
+    }
+
+    console.log(`🔄 Après statuts:`);
+    console.log(`   Joueur: ${playerPokemon.name} - Status: ${playerPokemon.status} - HP: ${playerPokemon.currentHp}/${playerPokemon.maxHp}`);
+    console.log(`   Adversaire: ${opponentPokemon.name} - Status: ${opponentPokemon.status} - HP: ${opponentPokemon.currentHp}/${opponentPokemon.maxHp}`);
+
+    // Mettre à jour la battle si des dégâts de statut ont été appliqués
+    if (battleUpdated) {
+      const updatedBattle = {
+        ...currentBattle,
+        trainer1: {
+          ...currentBattle.trainer1,
+          team: currentBattle.trainer1.team.map((p: Pokemon, index: number) =>
+            index === 0 ? playerPokemon : p
+          )
+        },
+        trainer2: {
+          ...currentBattle.trainer2,
+          team: currentBattle.trainer2.team.map((p: Pokemon, index: number) =>
+            index === 0 ? opponentPokemon : p
+          )
+        }
+      };
+      updateCurrentBattle(updatedBattle);
     }
   };
 
@@ -339,40 +437,8 @@ export function BattlePage() {
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Appliquer les dégâts de statut au joueur en fin de tour
-      const playerStatusDamage = battleUseCase.applyStatusDamage(playerPokemon);
-      if (playerStatusDamage.message) {
-        playerPokemon = playerStatusDamage.pokemon;
-        const statusPlayerTeam = currentBattle.trainer1.team.map((p: Pokemon, index: number) =>
-          index === 0 ? playerPokemon : p
-        );
-        updateCurrentBattle({
-          ...currentBattle,
-          trainer1: { ...currentBattle.trainer1, team: statusPlayerTeam }
-        });
-        
-        setBattleMessage(playerStatusDamage.message);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        if (playerPokemon.currentHp <= 0) {
-          setBattleMessage(`${playerPokemon.name} est K.O. à cause de son statut !`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const nextPlayerPokemon = battleUseCase.getFirstAlivePokemon(currentBattle.trainer1.team);
-          if (nextPlayerPokemon) {
-            setBattleMessage('Choisissez votre prochain Pokémon !');
-            setShowPokemonSwitcher(true);
-            setBattlePhase('switching');
-          } else {
-            setBattleMessage('Tous vos Pokémon sont K.O. ! Vous avez perdu...');
-            setTimeout(() => {
-              endBattle();
-              router.push('/league');
-            }, 3000);
-          }
-          return;
-        }
-      }
+      // Appliquer les dégâts de statut aux deux Pokémon à la fin du tour
+      await applyEndOfTurnStatusDamage(currentBattle);
       
       setIsPlayerTurn(true);
       setHasUsedItemOrSwitched(false);
@@ -528,6 +594,7 @@ export function BattlePage() {
         // Défaite ! Tous les Pokémon du joueur sont K.O.
         setBattleMessage('Tous vos Pokémon sont K.O. ! Vous avez perdu...');
         setTimeout(() => {
+          restoreAllPokemonPP();
           endBattle();
           router.push('/league');
         }, 3000);
@@ -535,44 +602,8 @@ export function BattlePage() {
       return;
     }
 
-    // Appliquer les dégâts de statut au joueur
-    const playerStatusDamage = battleUseCase.applyStatusDamage(playerPokemon);
-    if (playerStatusDamage.message) {
-      playerPokemon = playerStatusDamage.pokemon;
-      
-      // Mettre à jour les HP du joueur
-      const statusPlayerTeam = updatedBattle.trainer1.team.map((p: Pokemon, index: number) =>
-        index === 0 ? playerPokemon : p
-      );
-      updatedBattle = {
-        ...updatedBattle,
-        trainer1: { ...updatedBattle.trainer1, team: statusPlayerTeam }
-      };
-      updateCurrentBattle(updatedBattle);
-      
-      setBattleMessage(playerStatusDamage.message);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Vérifier si le joueur est KO à cause du statut
-      if (playerPokemon.currentHp <= 0) {
-        setBattleMessage(`${playerPokemon.name} est K.O. à cause de son statut !`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const nextPlayerPokemon = battleUseCase.getFirstAlivePokemon(updatedBattle.trainer1.team);
-        if (nextPlayerPokemon) {
-          setBattleMessage('Choisissez votre prochain Pokémon !');
-          setShowPokemonSwitcher(true);
-          setBattlePhase('switching');
-        } else {
-          setBattleMessage('Tous vos Pokémon sont K.O. ! Vous avez perdu...');
-          setTimeout(() => {
-            endBattle();
-            router.push('/league');
-          }, 3000);
-        }
-        return;
-      }
-    }
+    // Appliquer les dégâts de statut aux deux Pokémon à la fin du tour
+    await applyEndOfTurnStatusDamage(updatedBattle);
 
     // Retour au tour du joueur
     setIsPlayerTurn(true);
@@ -590,37 +621,46 @@ export function BattlePage() {
 
     const playerPokemon = gameState.currentBattle.trainer1.team[0];
 
-    // Appliquer l'effet de l'item (simplifié pour l'exemple)
-    if (item.type === 'healing') {
-      const healAmount = item.effect;
-      const newHp = Math.min(
-        playerPokemon.maxHp,
-        playerPokemon.currentHp + healAmount
-      );
+    // Utiliser le UseItemUseCase pour appliquer l'effet de l'item
+    const result = useItemUseCase.execute(playerPokemon, item);
 
-      // Créer un nouveau battle avec les HP mis à jour
-      const updatedBattle = {
+    if (!result.success) {
+      setBattleMessage(result.message);
+      setHasUsedItemOrSwitched(false);
+      return;
+    }
+
+    // Créer un nouveau battle avec le Pokémon mis à jour (si l'item a modifié le statut)
+    let updatedBattle = gameState.currentBattle;
+    if (result.pokemon) {
+      updatedBattle = {
         ...gameState.currentBattle,
         trainer1: {
           ...gameState.currentBattle.trainer1,
           team: [
-            { ...playerPokemon, currentHp: newHp },
+            result.pokemon,
             ...gameState.currentBattle.trainer1.team.slice(1)
           ]
         }
       };
-
-      // Mettre à jour le battle dans le contexte
       updateCurrentBattle(updatedBattle);
 
-      setBattleMessage(`${playerPokemon.name} récupère ${healAmount} PV grâce à ${item.name} !`);
-
-      // Retirer l'item de l'inventaire
-      removeItemFromInventory(item.id);
-    } else {
-      setBattleMessage(`Vous ne pouvez pas utiliser ${item.name} en combat !`);
-      setHasUsedItemOrSwitched(false);
+      // Mettre à jour aussi l'état global du joueur
+      if (gameState.player) {
+        const updatedPlayer = {
+          ...gameState.player,
+          team: gameState.player.team.map(p =>
+            p.id === result.pokemon!.id ? result.pokemon! : p
+          )
+        };
+        updatePlayer(updatedPlayer);
+      }
     }
+
+    setBattleMessage(result.message);
+
+    // Retirer l'item de l'inventaire
+    removeItemFromInventory(item.id);
   };
 
   // Gestion du changement de Pokémon
@@ -630,18 +670,34 @@ export function BattlePage() {
     setShowPokemonSwitcher(false);
     setHasUsedItemOrSwitched(true);
 
-    // Charger les moves du nouveau Pokémon avec PP restaurés
-    const newPokemonMoves = await moveGateway.getMovesByNames(pokemon.moves);
-    const restoredMoves = newPokemonMoves.map(move => ({
-      ...move,
-      pp: move.maxPp
-    }));
-    setPlayerMoves(restoredMoves);
+    // Récupérer le Pokémon avec ses stats actuelles depuis le combat en cours
+    const currentPokemonInTeam = gameState.currentBattle.trainer1.team.find(p => p.id === pokemon.id);
+    const pokemonToSwitch = currentPokemonInTeam || pokemon;
+
+    // Utiliser les moves stockés (avec PP actuels) au lieu de restaurer les PP
+    let currentMoves = pokemonToSwitch.currentMoves;
+    if (!currentMoves) {
+      // Si pas encore chargé (cas improbable), charger avec PP max
+      console.warn(`Moves not found for pokemon ${pokemonToSwitch.id}, loading with max PP`);
+      const newPokemonMoves = await moveGateway.getMovesByNames(pokemonToSwitch.moves);
+      currentMoves = newPokemonMoves.map(move => ({
+        ...move,
+        pp: move.maxPp
+      }));
+      // Mettre à jour le Pokémon avec currentMoves
+      if (gameState.player) {
+        const updatedTeam = gameState.player.team.map(p => 
+          p.id === pokemonToSwitch.id ? { ...p, currentMoves } : p
+        );
+        updatePlayer({ ...gameState.player, team: updatedTeam });
+      }
+    }
+    setPlayerMoves(currentMoves);
 
     // Réorganiser l'équipe pour mettre le nouveau Pokémon en position 0 (actif)
     const newTeam = [
-      pokemon,
-      ...gameState.currentBattle.trainer1.team.filter(p => p.id !== pokemon.id)
+      pokemonToSwitch,
+      ...gameState.currentBattle.trainer1.team.filter(p => p.id !== pokemonToSwitch.id)
     ];
 
     const updatedBattle = {
@@ -655,7 +711,7 @@ export function BattlePage() {
     // Mettre à jour le battle dans le contexte
     updateCurrentBattle(updatedBattle);
 
-    setBattleMessage(`${gameState.player?.name} envoie ${pokemon.name} !`);
+    setBattleMessage(`${gameState.player?.name} envoie ${pokemonToSwitch.name} !`);
     
     // Si on était en phase de switching (Pokémon KO), lancer le tour de l'adversaire
     if (battlePhase === 'switching') {
@@ -666,9 +722,33 @@ export function BattlePage() {
     }
   };
 
+  // Fonction pour restaurer tous les PP des Pokémon
+  const restoreAllPokemonPP = () => {
+    const restoredPokemonMovesPP = { ...pokemonMovesPP };
+    for (const pokemonId in restoredPokemonMovesPP) {
+      restoredPokemonMovesPP[pokemonId] = restoredPokemonMovesPP[pokemonId].map(move => ({
+        ...move,
+        pp: move.maxPp
+      }));
+    }
+    setPokemonMovesPP(restoredPokemonMovesPP);
+    
+    // Mettre à jour currentMoves de tous les Pokémon dans gameState
+    if (gameState.player) {
+      const updatedTeam = gameState.player.team.map(pokemon => {
+        const restoredMoves = restoredPokemonMovesPP[pokemon.id];
+        return restoredMoves ? { ...pokemon, currentMoves: restoredMoves } : pokemon;
+      });
+      updatePlayer({ ...gameState.player, team: updatedTeam });
+    }
+  };
+
   // Gestion de la victoire
   const handleVictory = async () => {
     if (!gameState.currentBattle || !gameState.player) return;
+
+    // Restaurer tous les PP des Pokémon de l'équipe
+    restoreAllPokemonPP();
 
     // Ajouter le trainer battu à la liste
     addDefeatedTrainer(gameState.currentBattle.trainer2.id);
@@ -835,7 +915,7 @@ export function BattlePage() {
       />
 
       <PokemonSwitcher
-        pokemon={gameState.player?.team || []}
+        pokemon={gameState.currentBattle?.trainer1.team || []}
         currentPokemon={gameState.currentBattle.trainer1.team[0]}
         onPokemonSelect={handlePokemonSwitch}
         onClose={() => setShowPokemonSwitcher(false)}

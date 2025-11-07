@@ -1,11 +1,11 @@
-import { Pokemon } from '../../domain/entities/Pokemon';
+import { Pokemon, StatusCondition } from '../../domain/entities/Pokemon';
 import { Item } from '../../domain/entities/Item';
 import { IMathService } from '@/domain/ports/IMathService';
 
 export class UseItemUseCase {
   constructor(private mathService: IMathService) {}
 
-  execute(pokemon: Pokemon, item: Item): { success: boolean; message: string } {
+  execute(pokemon: Pokemon, item: Item): { success: boolean; message: string; pokemon?: Pokemon } {
     if (item.type === 'healing') {
       if (item.name.toLowerCase().includes('revive')) {
         // Revive only works on KO pokemon
@@ -24,8 +24,74 @@ export class UseItemUseCase {
         }
         const healAmount = item.effect;
         pokemon.currentHp = Math.min(pokemon.maxHp, pokemon.currentHp + healAmount);
+        
+        // Special case: full-restore also cures status
+        if (item.name.toLowerCase().includes('restauration totale') || item.name.toLowerCase().includes('full-restore')) {
+          const statusCured = pokemon.status;
+          const updatedPokemon = {
+            ...pokemon,
+            status: null as StatusCondition,
+            statusTurns: undefined
+          };
+          
+          const healMessage = `Pokemon healed for ${healAmount} HP`;
+          if (statusCured) {
+            const statusNames: Record<string, string> = {
+              'burn': 'brûlure',
+              'freeze': 'gel',
+              'paralysis': 'paralysie',
+              'poison': 'poison',
+              'badly-poison': 'poison grave',
+              'sleep': 'sommeil',
+              'confusion': 'confusion'
+            };
+            return { 
+              success: true, 
+              message: `${healMessage} et n'est plus ${statusNames[statusCured]} !`,
+              pokemon: updatedPokemon
+            };
+          }
+          return { success: true, message: healMessage };
+        }
+        
         return { success: true, message: `Pokemon healed for ${healAmount} HP` };
       }
+    }
+
+    if (item.type === 'status-heal') {
+      // Status healing items
+      if (!pokemon.status || pokemon.status === null) {
+        return { success: false, message: `${pokemon.name} n'a pas de statut !` };
+      }
+
+      // Determine which status this item cures based on item name
+      const curedStatus = this.getCuredStatus(item.name);
+      if (curedStatus !== null && !this.canCureStatus(pokemon.status, curedStatus)) {
+        return { success: false, message: `${item.name} ne peut pas soigner ce statut !` };
+      }
+
+      // Cure the status
+      const updatedPokemon = {
+        ...pokemon,
+        status: null as StatusCondition,
+        statusTurns: undefined
+      };
+
+      const statusNames: Record<string, string> = {
+        'burn': 'brûlure',
+        'freeze': 'gel',
+        'paralysis': 'paralysie',
+        'poison': 'poison',
+        'badly-poison': 'poison grave',
+        'sleep': 'sommeil',
+        'confusion': 'confusion'
+      };
+
+      return {
+        success: true,
+        message: `${pokemon.name} n'est plus ${statusNames[pokemon.status]} !`,
+        pokemon: updatedPokemon
+      };
     }
 
     if (item.type === 'boost') {
@@ -43,5 +109,44 @@ export class UseItemUseCase {
     }
 
     return { success: false, message: 'Unknown item type' };
+  }
+
+  /**
+   * Determine which status an item cures based on its name
+   */
+  private getCuredStatus(itemName: string): StatusCondition | null {
+    const name = itemName.toLowerCase();
+
+    if (name.includes('antidote') || name.includes('anti-poison')) {
+      return 'poison';
+    }
+    if (name.includes('anti-para') || name.includes('antipara')) {
+      return 'paralysis';
+    }
+    if (name.includes('anti-brûle') || name.includes('antibrule') || name.includes('anti-brule')) {
+      return 'burn';
+    }
+    if (name.includes('antigel') || name.includes('anti-gel')) {
+      return 'freeze';
+    }
+    if (name.includes('réveil') || name.includes('reveil') || name.includes('awakening')) {
+      return 'sleep';
+    }
+    if (name.includes('guérison') || name.includes('guerison') || name.includes('full-heal') || name.includes('total soin')) {
+      return null; // Cures all statuses
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if an item can cure the Pokemon's current status
+   */
+  private canCureStatus(currentStatus: StatusCondition, curedStatus: StatusCondition | null): boolean {
+    if (curedStatus === null) {
+      // Total heal cures all statuses
+      return true;
+    }
+    return currentStatus === curedStatus;
   }
 }

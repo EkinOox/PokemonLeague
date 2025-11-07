@@ -116,19 +116,102 @@ describe('UseItemUseCase', () => {
     });
   });
 
-  describe('Other items', () => {
-    it('should activate shield', () => {
-      const shield: Item = { id: 'shield', name: 'Shield', type: 'other', effect: 1 };
-      const result = useCase.execute(pokemon, shield);
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Shield activated');
+  describe('Status healing items', () => {
+    beforeEach(() => {
+      pokemon.status = 'poison';
     });
 
-    it('should fail for unknown item type', () => {
-      const unknown: Item = { id: 'unknown', name: 'Unknown', type: 'ball', effect: 0 };
-      const result = useCase.execute(pokemon, unknown);
+    it('should cure poison with Antidote', () => {
+      const antidote: Item = { id: 'antidote', name: 'Antidote', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antidote);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus poison');
+    });
+
+    it('should cure paralysis with Anti-Para', () => {
+      pokemon.status = 'paralysis';
+      const antiPara: Item = { id: 'paralyze-heal', name: 'Anti-Para', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antiPara);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus paralysie');
+    });
+
+    it('should cure burn with Anti-Brûle', () => {
+      pokemon.status = 'burn';
+      const antiBurn: Item = { id: 'burn-heal', name: 'Anti-Brûle', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antiBurn);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus brûlure');
+    });
+
+    it('should cure freeze with Antigel', () => {
+      pokemon.status = 'freeze';
+      const antiFreeze: Item = { id: 'ice-heal', name: 'Antigel', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antiFreeze);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus gel');
+    });
+
+    it('should cure sleep with Réveil', () => {
+      pokemon.status = 'sleep';
+      const awakening: Item = { id: 'awakening', name: 'Réveil', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, awakening);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus sommeil');
+    });
+
+    it('should cure all statuses with Guérison', () => {
+      const fullHeal: Item = { id: 'full-heal', name: 'Guérison', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, fullHeal);
+      expect(result.success).toBe(true);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('n\'est plus poison');
+    });
+
+    it('should fail if pokemon has no status', () => {
+      pokemon.status = null;
+      const antidote: Item = { id: 'antidote', name: 'Antidote', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antidote);
       expect(result.success).toBe(false);
-      expect(result.message).toContain('Unknown item type');
+      expect(result.message).toContain('n\'a pas de statut');
+    });
+
+    it('should fail if item cannot cure the specific status', () => {
+      pokemon.status = 'burn';
+      const antidote: Item = { id: 'antidote', name: 'Antidote', type: 'status-heal', effect: 0 };
+      const result = useCase.execute(pokemon, antidote);
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('ne peut pas soigner ce statut');
+    });
+  });
+
+  describe('Full restore items', () => {
+    it('should heal HP and cure status with Restauration Totale', () => {
+      pokemon.currentHp = 30;
+      pokemon.status = 'poison';
+      const fullRestore: Item = { id: 'full-restore', name: 'Restauration Totale', type: 'healing', effect: 999 };
+      const result = useCase.execute(pokemon, fullRestore);
+      expect(result.success).toBe(true);
+      expect(pokemon.currentHp).toBe(100);
+      expect(result.pokemon?.status).toBeNull();
+      expect(result.message).toContain('healed');
+      expect(result.message).toContain('n\'est plus poison');
+    });
+
+    it('should heal HP only if no status with Restauration Totale', () => {
+      pokemon.currentHp = 30;
+      pokemon.status = null;
+      const fullRestore: Item = { id: 'full-restore', name: 'Restauration Totale', type: 'healing', effect: 999 };
+      const result = useCase.execute(pokemon, fullRestore);
+      expect(result.success).toBe(true);
+      expect(pokemon.currentHp).toBe(100);
+      expect(result.message).toContain('healed');
+      expect(result.message).not.toContain('n\'est plus');
     });
   });
 

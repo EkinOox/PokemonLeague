@@ -16,16 +16,12 @@ export function LeaguePage() {
   const [selectedTrainerIndex, setSelectedTrainerIndex] = useState(0);
   const [battleMessage, setBattleMessage] = useState('');
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [playerName, setPlayerName] = useState('');
 
   useEffect(() => {
     if (!gameState.player) {
       router.push('/selection');
       return;
     }
-
-    // Synchroniser le nom du joueur pour éviter l'hydratation mismatch
-    setPlayerName(gameState.player.name);
 
     // Si les trainers n'ont pas encore été générés, rediriger vers la sélection
     if (!gameState.leagueTrainers || gameState.leagueTrainers.length === 0) {
@@ -37,27 +33,31 @@ export function LeaguePage() {
   }, [gameState.player, gameState.leagueTrainers, router]);
 
   const handleItemUse = async (item: Item) => {
-    try {
-      const useItemUseCase = UseCaseFactory.createUseItemUseCase();
-      
-      // Utiliser l'item sur le premier Pokémon du joueur (pour l'instant)
-      const targetPokemon = gameState.player?.team[0];
-      if (!targetPokemon) {
-        setBattleMessage('Aucun Pokémon disponible');
-        setTimeout(() => setBattleMessage(''), 3000);
-        return;
-      }
+    if (!gameState.player) return;
 
-      const result = await useItemUseCase.execute(targetPokemon, item);
+    // Utiliser le factory pour créer le use case
+    const useItemUseCase = UseCaseFactory.createUseItemUseCase();
+
+    // Ouvrir un modal de sélection de Pokémon (simplifié pour l'instant)
+    const pokemon = gameState.player.team[0]; // Utiliser le premier Pokémon pour le test
+    if (!pokemon) {
+      setBattleMessage('Aucun Pokémon dans votre équipe !');
+      setTimeout(() => setBattleMessage(''), 3000);
+      return;
+    }
+
+    try {
+      const result = useItemUseCase.execute(pokemon, item);
 
       if (result.success) {
-        // Mettre à jour le joueur avec le Pokémon modifié
+        // Mettre à jour le Pokémon si nécessaire
         if (result.pokemon) {
+          const updatedTeam = gameState.player.team.map(p => 
+            p.id === pokemon.id ? result.pokemon! : p
+          );
           const updatedPlayer = {
-            ...gameState.player!,
-            team: gameState.player!.team.map(p => 
-              p.id === targetPokemon.id ? result.pokemon! : p
-            )
+            ...gameState.player,
+            team: updatedTeam
           };
           updatePlayer(updatedPlayer);
         }
@@ -82,8 +82,6 @@ export function LeaguePage() {
       setTimeout(() => setBattleMessage(''), 3000);
     }
   };
-
-  const handleChallenge = (trainer: Trainer, trainerIndex: number) => {
     if (!gameState.player) return;
 
     // Vérifier si le joueur a débloqué ce trainer
@@ -124,6 +122,57 @@ export function LeaguePage() {
     router.push('/battle');
   };
 
+  const handleItemUse = async (item: Item) => {
+    if (!gameState.player) return;
+
+    // Utiliser le factory pour créer le use case
+    const useItemUseCase = UseCaseFactory.createUseItemUseCase();
+
+    // Ouvrir un modal de sélection de Pokémon (simplifié pour l'instant)
+    const pokemon = gameState.player.team[0]; // Utiliser le premier Pokémon pour le test
+    if (!pokemon) {
+      setBattleMessage('Aucun Pokémon dans votre équipe !');
+      setTimeout(() => setBattleMessage(''), 3000);
+      return;
+    }
+
+    try {
+      const result = useItemUseCase.execute(pokemon, item);
+
+      if (result.success) {
+        // Mettre à jour le Pokémon si nécessaire
+        if (result.pokemon) {
+          const updatedTeam = gameState.player.team.map(p => 
+            p.id === pokemon.id ? result.pokemon! : p
+          );
+          const updatedPlayer = {
+            ...gameState.player,
+            team: updatedTeam
+          };
+          updatePlayer(updatedPlayer);
+        }
+
+        // Retirer l'item de l'inventaire
+        removeItemFromInventory(item.id);
+
+        // Fermer l'inventaire
+        setInventoryOpen(false);
+
+        // Afficher le message de succès
+        setBattleMessage(result.message);
+        setTimeout(() => setBattleMessage(''), 3000);
+      } else {
+        // Afficher le message d'erreur
+        setBattleMessage(result.message);
+        setTimeout(() => setBattleMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'utilisation de l\'item:', error);
+      setBattleMessage('Erreur lors de l\'utilisation de l\'item');
+      setTimeout(() => setBattleMessage(''), 3000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-950 to-slate-950 flex items-center justify-center scanlines">
@@ -148,7 +197,7 @@ export function LeaguePage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold pixel-text text-yellow-300 mb-2">LIGUE POKÉMON</h1>
-                <p className="text-white pixel-text text-sm">Dresseur: <span className="text-yellow-300">{playerName}</span></p>
+                <p className="text-white pixel-text text-sm">Dresseur: <span className="text-yellow-300">{gameState.player?.name}</span></p>
               </div>
               <div className="text-right">
                 <p className="pixel-text text-slate-400 text-xs mb-1">POINTS DE LIGUE</p>
