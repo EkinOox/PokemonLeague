@@ -1,28 +1,6 @@
 import { Pokemon } from '../../domain/entities/Pokemon';
 import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
-
-interface TyradexType {
-  name: string;
-  image?: string;
-}
-
-interface TyradexPokemonData {
-  pokedex_id?: number;
-  name?: { fr?: string; en?: string };
-  types?: TyradexType[];
-  stats?: {
-    hp?: number;
-    atk?: number;
-    def?: number;
-    spe_atk?: number;
-    spe_def?: number;
-    vit?: number;
-  };
-  sprites?: {
-    regular?: string;
-    shiny?: string;
-  };
-}
+import { TyradexType, TyradexPokemonData } from './types/TyradexTypes';
 
 export class PokemonAPIGateway implements IPokemonGateway {
   private baseUrl = 'https://tyradex.vercel.app/api/v1/pokemon';

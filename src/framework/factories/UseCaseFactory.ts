@@ -11,6 +11,7 @@ import { GameInitializationUseCase } from '@/application/usecases/GameInitializa
 import { LeagueUseCase } from '@/application/usecases/LeagueUseCase';
 import { UseItemUseCase } from '@/application/usecases/UseItemUseCase';
 import { ServiceFactory } from './ServiceFactory';
+import { GatewayFactory } from './GatewayFactory';
 import { IBattleUseCase } from '@/domain/ports/IBattleUseCase';
 import { IRewardsUseCase } from '@/domain/ports/IRewardsUseCase';
 import { IGameInitializationUseCase } from '@/domain/ports/IGameInitializationUseCase';
@@ -37,7 +38,8 @@ export class UseCaseFactory {
   static createRewardsUseCase(): IRewardsUseCase {
     return new RewardsUseCase(
       ServiceFactory.getRandomGenerator(),
-      ServiceFactory.getMathService()
+      ServiceFactory.getMathService(),
+      GatewayFactory.getPokemonGateway()
     );
   }
 
@@ -57,7 +59,8 @@ export class UseCaseFactory {
   static createLeagueUseCase(): ILeagueUseCase {
     return new LeagueUseCase(
       ServiceFactory.getRandomGenerator(),
-      ServiceFactory.getMathService()
+      ServiceFactory.getMathService(),
+      GatewayFactory.getPokemonGateway()
     );
   }
 

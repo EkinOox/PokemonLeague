@@ -1,19 +1,16 @@
 import { Trainer } from '@/domain/entities/Trainer';
 import { Pokemon } from '@/domain/entities/Pokemon';
-import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
+import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
 import { ILeagueUseCase } from '@/domain/ports/ILeagueUseCase';
 
 export class LeagueUseCase implements ILeagueUseCase {
-  private gateway: PokemonAPIGateway;
-
   constructor(
     private randomGenerator: IRandomGenerator,
-    private mathService: IMathService
-  ) {
-    this.gateway = new PokemonAPIGateway();
-  }
+    private mathService: IMathService,
+    private pokemonGateway: IPokemonGateway
+  ) {}
 
   /**
    * Génère les dresseurs de la ligue avec des niveaux croissants
@@ -58,7 +55,7 @@ export class LeagueUseCase implements ILeagueUseCase {
       
       if (!usedIds.has(randomId)) {
         usedIds.add(randomId);
-        const pokemon = await this.gateway.getPokemon(randomId.toString());
+        const pokemon = await this.pokemonGateway.getPokemon(randomId.toString());
         
         if (pokemon) {
           // Ajuste le niveau et les HP

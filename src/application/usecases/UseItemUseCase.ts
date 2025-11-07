@@ -13,8 +13,11 @@ export class UseItemUseCase implements IUseItemUseCase {
         if (pokemon.currentHp > 0) {
           return { success: false, message: 'Pokemon is not knocked out' };
         }
-        pokemon.currentHp = this.mathService.floor(pokemon.maxHp / 2);
-        return { success: true, message: 'Pokemon revived' };
+        const updatedPokemon = {
+          ...pokemon,
+          currentHp: this.mathService.floor(pokemon.maxHp / 2)
+        };
+        return { success: true, message: 'Pokemon revived', pokemon: updatedPokemon };
       } else {
         // Healing items
         if (pokemon.currentHp === 0) {
@@ -24,13 +27,17 @@ export class UseItemUseCase implements IUseItemUseCase {
           return { success: false, message: 'Pokemon is already at full HP' };
         }
         const healAmount = item.effect;
-        pokemon.currentHp = Math.min(pokemon.maxHp, pokemon.currentHp + healAmount);
+        const newHp = this.mathService.min(pokemon.maxHp, pokemon.currentHp + healAmount);
+        const updatedPokemon = {
+          ...pokemon,
+          currentHp: newHp
+        };
         
         // Special case: full-restore also cures status
         if (item.name.toLowerCase().includes('restauration totale') || item.name.toLowerCase().includes('full-restore')) {
           const statusCured = pokemon.status;
-          const updatedPokemon = {
-            ...pokemon,
+          const fullRestorePokemon = {
+            ...updatedPokemon,
             status: null as StatusCondition,
             statusTurns: undefined
           };
@@ -49,13 +56,13 @@ export class UseItemUseCase implements IUseItemUseCase {
             return { 
               success: true, 
               message: `${healMessage} et n'est plus ${statusNames[statusCured]} !`,
-              pokemon: updatedPokemon
+              pokemon: fullRestorePokemon
             };
           }
-          return { success: true, message: healMessage };
+          return { success: true, message: healMessage, pokemon: updatedPokemon };
         }
         
-        return { success: true, message: `Pokemon healed for ${healAmount} HP` };
+        return { success: true, message: `Pokemon healed for ${healAmount} HP`, pokemon: updatedPokemon };
       }
     }
 

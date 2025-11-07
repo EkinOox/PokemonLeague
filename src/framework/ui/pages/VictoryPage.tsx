@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '@/framework/ui/context/GameContext';
+import { ServiceFactory } from '@/framework/factories';
 
 export function VictoryPage() {
   const router = useRouter();
   const { gameState, setGamePhase } = useGame();
   const [showCredits, setShowCredits] = useState(false);
   const [showStats, setShowStats] = useState(false);
+
+  // Services pour les calculs aléatoires
+  const randomGenerator = ServiceFactory.getRandomGenerator();
 
   useEffect(() => {
     // Animation sequence
@@ -62,7 +66,7 @@ export function VictoryPage() {
             key={i}
             className="absolute w-2 h-2 bg-yellow-400 rounded-full"
             initial={{
-              x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : Math.random() * 1000,
+              x: typeof window !== 'undefined' ? randomGenerator.generate() * window.innerWidth : randomGenerator.generate() * 1000,
               y: typeof window !== 'undefined' ? window.innerHeight + 10 : 1000,
               opacity: 0,
             }}
@@ -73,12 +77,12 @@ export function VictoryPage() {
             }}
             transition={{
               duration: 3,
-              delay: Math.random() * 5,
+              delay: randomGenerator.generate() * 5,
               repeat: Infinity,
-              repeatDelay: Math.random() * 3,
+              repeatDelay: randomGenerator.generate() * 3,
             }}
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${randomGenerator.generate() * 100}%`,
             }}
           />
         ))}

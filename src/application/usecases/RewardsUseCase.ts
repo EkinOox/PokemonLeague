@@ -1,20 +1,17 @@
 import { Item } from '@/domain/entities/Item';
 import { Pokemon } from '@/domain/entities/Pokemon';
 import { Trainer } from '@/domain/entities/Trainer';
-import { PokemonAPIGateway } from '@/adapters/gateways/PokemonAPIGateway';
+import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
 import { IRewardsUseCase, ItemReward, PokemonReward, RewardOptions } from '@/domain/ports/IRewardsUseCase';
 
 export class RewardsUseCase implements IRewardsUseCase {
-  private gateway: PokemonAPIGateway;
-
   constructor(
     private randomGenerator: IRandomGenerator,
-    private mathService: IMathService
-  ) {
-    this.gateway = new PokemonAPIGateway();
-  }
+    private mathService: IMathService,
+    private pokemonGateway: IPokemonGateway
+  ) {}
 
   /**
    * Génère les options de récompenses
@@ -140,7 +137,7 @@ export class RewardsUseCase implements IRewardsUseCase {
 
     // Mélanger et prendre 'count' items uniques
     const shuffled = this.randomGenerator.shuffle([...allItems]);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    return shuffled.slice(0, this.mathService.min(count, shuffled.length));
   }
 
   /**
@@ -148,20 +145,21 @@ export class RewardsUseCase implements IRewardsUseCase {
    */
   private async generateBonusPokemon(level: number): Promise<Pokemon | null> {
     try {
-      // Utilise la même plage que la sélection de départ (500 premiers Pokémon)
-      const pokemonIds = Array.from({ length: 500 }, (_, i) => i + 1);
+      // Utilise la même plage que la génération des dresseurs (150 premiers Pokémon de Gen 1)
+      // Tous ces IDs correspondent à des Pokémon existants
+      const pokemonIds = Array.from({ length: 150 }, (_, i) => i + 1);
 
-      // Essaie jusqu'à 5 fois de trouver un Pokémon valide
-      for (let attempt = 0; attempt < 5; attempt++) {
+      // Essaie jusqu'à 3 fois de trouver un Pokémon valide
+      for (let attempt = 0; attempt < 3; attempt++) {
         const randomId = this.randomGenerator.selectRandom(pokemonIds);
         
-        const pokemon = await this.gateway.getPokemon(randomId.toString());
+        const pokemon = await this.pokemonGateway.getPokemon(randomId.toString());
         
         if (pokemon) {
           
           if (pokemon.name) {
             // Ajuste le niveau du Pokémon bonus
-            const bonusLevel = Math.max(5, level - 5); // Niveau proche de l'adversaire
+            const bonusLevel = this.mathService.max(5, level - 5); // Niveau proche de l'adversaire
             const adjustedPokemon = this.adjustPokemonLevel(pokemon, bonusLevel);
             return adjustedPokemon;
           } else {
@@ -172,7 +170,7 @@ export class RewardsUseCase implements IRewardsUseCase {
         }
       }
 
-      console.warn('Could not generate a valid bonus pokemon after 5 attempts');
+      console.warn('Could not generate a valid bonus pokemon after 3 attempts');
       return null;
     } catch (error) {
       console.error('Error generating bonus pokemon:', error);
@@ -237,7 +235,7 @@ export class RewardsUseCase implements IRewardsUseCase {
       specialDefense: 50,
       speed: 50,
     };
-    fallbackPokemon.level = Math.max(5, level - 5);
+    fallbackPokemon.level = this.mathService.max(5, level - 5);
     fallbackPokemon.currentHp = fallbackPokemon.stats.hp;
     fallbackPokemon.maxHp = fallbackPokemon.stats.hp;
     fallbackPokemon.moves = ['tackle', 'growl', 'scratch', 'tail-whip'];

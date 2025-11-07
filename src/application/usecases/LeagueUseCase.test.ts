@@ -1,18 +1,20 @@
 import { LeagueUseCase } from './LeagueUseCase';
 import { Trainer } from '@/domain/entities/Trainer';
 import { Item } from '@/domain/entities/Item';
-import { MockRandomGenerator, MockMathService } from './__mocks__/testHelpers';
+import { MockRandomGenerator, MockMathService, MockPokemonGateway } from './__mocks__/testHelpers';
 
 describe('LeagueUseCase', () => {
   let leagueUseCase: LeagueUseCase;
   let mockRandomGenerator: MockRandomGenerator;
   let mockMathService: MockMathService;
+  let mockPokemonGateway: MockPokemonGateway;
 
   beforeEach(() => {
     mockRandomGenerator = new MockRandomGenerator();
     mockRandomGenerator.setMockValue(0.5); // Use deterministic values for tests
     mockMathService = new MockMathService();
-    leagueUseCase = new LeagueUseCase(mockRandomGenerator, mockMathService);
+    mockPokemonGateway = new MockPokemonGateway();
+    leagueUseCase = new LeagueUseCase(mockRandomGenerator, mockMathService, mockPokemonGateway);
   });
 
   describe('generateLeagueTrainers', () => {

@@ -1,6 +1,8 @@
 import { IRandomGenerator } from '@/domain/ports/IRandomGenerator';
 import { IMathService } from '@/domain/ports/IMathService';
 import { IDateProvider } from '@/domain/ports/IDateProvider';
+import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
+import { Pokemon } from '@/domain/entities/Pokemon';
 
 /**
  * Mock pour IRandomGenerator avec valeur contrôlable
@@ -106,5 +108,20 @@ export class MockDateProvider implements IDateProvider {
   
   generateTimestamp(): string {
     return this.mockTimestamp.toString();
+  }
+}
+
+/**
+ * Mock pour IPokemonGateway
+ */
+export class MockPokemonGateway implements IPokemonGateway {
+  private mockPokemon: Pokemon | null = null;
+  
+  setMockPokemon(pokemon: Pokemon | null) {
+    this.mockPokemon = pokemon;
+  }
+  
+  async getPokemon(id: string): Promise<Pokemon | null> {
+    return this.mockPokemon;
   }
 }

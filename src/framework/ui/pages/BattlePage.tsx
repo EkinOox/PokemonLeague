@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useGame } from '@/framework/ui/context/GameContext';
 import { BattleScene } from '@/framework/ui/components/BattleScene';
-import { MoveSelector } from '@/framework/ui/components/MoveSelector';
 import { AttackSelector } from '@/framework/ui/components/AttackSelector';
 import { Inventory } from '@/framework/ui/components/Inventory';
 import { PokemonSwitcher } from '@/framework/ui/components/PokemonSwitcher';
@@ -13,7 +12,7 @@ import { Move } from '@/domain/entities/Move';
 import { Item } from '@/domain/entities/Item';
 import { Pokemon } from '@/domain/entities/Pokemon';
 import { Battle } from '@/domain/entities/Battle';
-import { UseCaseFactory, GatewayFactory } from '@/framework/factories';
+import { UseCaseFactory, GatewayFactory, ServiceFactory } from '@/framework/factories';
 
 type BattlePhase = 'selecting' | 'inventory' | 'switching' | 'animating' | 'finished';
 
@@ -39,6 +38,10 @@ export function BattlePage() {
   const rewardsUseCase = UseCaseFactory.createRewardsUseCase();
   const useItemUseCase = UseCaseFactory.createUseItemUseCase();
   const moveGateway = GatewayFactory.getMoveGateway();
+  
+  // Services pour les calculs mathématiques et aléatoires
+  const mathService = ServiceFactory.getMathService();
+  const randomGenerator = ServiceFactory.getRandomGenerator();
 
   // Garder une référence des IDs des Pokémon actuels pour détecter les changements
   const [currentPlayerPokemonId, setCurrentPlayerPokemonId] = useState<string | null>(null);
@@ -194,7 +197,7 @@ export function BattlePage() {
       );
 
       // Appliquer les dégâts
-      let newOpponentHp = Math.max(0, opponentPokemon.currentHp - damage);
+      let newOpponentHp = mathService.max(0, opponentPokemon.currentHp - damage);
 
       // Message de combat avec critique
       let criticalText = isCritical ? ' Coup critique !' : '';
@@ -481,7 +484,7 @@ export function BattlePage() {
         struggleMove
       );
       
-      const newPlayerHp = Math.max(0, playerPokemon.currentHp - damage);
+      const newPlayerHp = mathService.max(0, playerPokemon.currentHp - damage);
       
       // Mettre à jour l'équipe du joueur avec les HP du Pokémon actuel
       const updatedPlayerTeam = currentBattle.trainer1.team.map((p: Pokemon, index: number) =>
@@ -508,7 +511,7 @@ export function BattlePage() {
       return;
     }
     
-    const randomMoveIndex = Math.floor(Math.random() * usableMoves.length);
+    const randomMoveIndex = mathService.floor(randomGenerator.generate() * usableMoves.length);
     const opponentMove = usableMoves[randomMoveIndex];
     
     // Réduire les PP du move de l'adversaire
@@ -525,7 +528,7 @@ export function BattlePage() {
     );
 
     // Appliquer les dégâts
-    let newPlayerHp = Math.max(0, playerPokemon.currentHp - damage);
+    let newPlayerHp = mathService.max(0, playerPokemon.currentHp - damage);
 
     // Message de combat avec critique
     let criticalText = isCritical ? ' Coup critique !' : '';

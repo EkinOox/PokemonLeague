@@ -1,20 +1,7 @@
 import { Move } from '@/domain/entities/Move';
 import { getMoveEffect } from '@/domain/config/moveEffects';
 import { IMoveGateway } from '@/domain/ports/IMoveGateway';
-
-interface PokeAPIMoveData {
-  name: string;
-  type: { name: string };
-  power: number | null;
-  accuracy: number | null;
-  pp: number;
-  damage_class: { name: string };
-  priority: number;
-  effect_entries: Array<{
-    language: { name: string };
-    short_effect: string;
-  }>;
-}
+import { PokeAPIMoveData } from './types/PokeAPITypes';
 
 export class PokeAPIMoveGateway implements IMoveGateway {
   private baseUrl = 'https://pokeapi.co/api/v2';

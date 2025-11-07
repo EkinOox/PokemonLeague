@@ -1,20 +1,45 @@
 import { RewardsUseCase } from './RewardsUseCase';
 import { Item } from '@/domain/entities/Item';
-import { MockRandomGenerator, MockMathService } from './__mocks__/testHelpers';
+import { Pokemon } from '@/domain/entities/Pokemon';
+import { MockRandomGenerator, MockMathService, MockPokemonGateway } from './__mocks__/testHelpers';
 
 describe('RewardsUseCase', () => {
   let rewardsUseCase: RewardsUseCase;
   let mockRandomGenerator: MockRandomGenerator;
   let mockMathService: MockMathService;
+  let mockPokemonGateway: MockPokemonGateway;
 
   beforeEach(() => {
     mockRandomGenerator = new MockRandomGenerator();
     mockMathService = new MockMathService();
+    mockPokemonGateway = new MockPokemonGateway();
+    
+    // Configure mock to return a valid Pokemon to avoid warnings
+    const mockPokemon = new Pokemon();
+    mockPokemon.id = '25';
+    mockPokemon.name = 'Pikachu';
+    mockPokemon.types = ['electric'];
+    mockPokemon.stats = {
+      hp: 35,
+      attack: 55,
+      defense: 40,
+      specialAttack: 50,
+      specialDefense: 50,
+      speed: 90,
+    };
+    mockPokemon.level = 5;
+    mockPokemon.maxHp = 35;
+    mockPokemon.currentHp = 35;
+    mockPokemon.moves = ['thunder-shock', 'growl', 'tail-whip', 'thunder-wave'];
+    mockPokemon.sprite = 'pikachu-sprite.png';
+    mockPokemon.emoji = '⚡';
+    
+    mockPokemonGateway.setMockPokemon(mockPokemon);
     
     // Use real random for reward variety
     mockRandomGenerator.useReal();
     
-    rewardsUseCase = new RewardsUseCase(mockRandomGenerator, mockMathService);
+    rewardsUseCase = new RewardsUseCase(mockRandomGenerator, mockMathService, mockPokemonGateway);
   });
 
   describe('generateRewardOptions', () => {
