@@ -1,14 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/api/pokemon/:id',
-        destination: 'https://tyradex.vercel.app/api/v1/pokemon/:id',
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {
@@ -18,7 +10,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'tyradex.vercel.app',
+        hostname: 'tyradex.app',
       },
     ],
   },
