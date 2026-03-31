@@ -3,7 +3,7 @@ import { IPokemonGateway } from '@/domain/ports/IPokemonGateway';
 import { TyradexType, TyradexPokemonData } from './types/TyradexTypes';
 
 export class PokemonAPIGateway implements IPokemonGateway {
-  private baseUrl = 'https://tyradex.vercel.app/api/v1/pokemon';
+  private baseUrl = '/api/pokemon';
 
   async getPokemon(id: string): Promise<Pokemon | null> {
     try {
